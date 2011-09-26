@@ -12,8 +12,11 @@ class DcpMessage
 public:
     DcpMessage();
 //    DcpMessage(const DcpMessage &other);
-//    DcpMessage(quint16 flags, quint32 snr, const QByteArray &source,
-//               const QByteArray &destination, const QByteArray &data);
+    DcpMessage(quint16 flags, quint32 snr, const QByteArray &source,
+               const QByteArray &destination, const QByteArray &data);
+
+    void clear();
+    bool isValid() const;
 
 //    quint16 flags() const;
 //    void setFlags(quint16 flags);
@@ -31,6 +34,12 @@ public:
 //    void setData(const QByteArray &data);
 
 private:
+    void init(const QByteArray &rawMsg);
+    void init(quint16 flags, quint32 snr, const QByteArray &source,
+              const QByteArray &destination, const QByteArray &data);
+
+private:
+    bool m_valid;
     quint16 m_flags;
     quint32 m_snr;
     QByteArray m_source;
