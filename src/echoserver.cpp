@@ -63,10 +63,22 @@ void EchoServer::connected()
     QByteArray src("echo");
 
     QByteArray a(55, '\0');
-    a[3] = 5;
+    a[3] = a[49] = 5;
     a.replace(14, 16, src.leftJustified(16, '\0', true));
+    a.replace(50, 5, "0 ACK");
+
+    DcpMessage msg(a.mid(8));
+    qDebug() << msg.flags() << msg.snr()
+             << msg.source() << msg.destination()
+             << msg.data();
+
+    DcpMessage msg2(0, 0, src, QByteArray(), "0 ACK");
+    qDebug() << msg2.flags() << msg2.snr()
+             << msg2.source() << msg2.destination()
+             << msg2.data();
 
     m_dcp->sendMessage(a);
+    m_dcp->sendMessage(msg2);
 }
 
 void EchoServer::disconnected()

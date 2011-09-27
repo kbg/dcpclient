@@ -11,27 +11,31 @@ class DcpMessage
 {
 public:
     DcpMessage();
-//    DcpMessage(const DcpMessage &other);
+    DcpMessage(const DcpMessage &other);
+    explicit DcpMessage(const QByteArray &rawMsg);
     DcpMessage(quint16 flags, quint32 snr, const QByteArray &source,
                const QByteArray &destination, const QByteArray &data);
 
     void clear();
     bool isValid() const;
 
-//    quint16 flags() const;
-//    void setFlags(quint16 flags);
+    quint16 flags() const;
+    void setFlags(quint16 flags);
 
-//    quint32 snr() const;
-//    void setSnr(quint32 snr);
+    quint32 snr() const;
+    void setSnr(quint32 snr);
 
-//    QByteArray source() const;
-//    void setSource(const QByteArray &source);
+    QByteArray source() const;
+    void setSource(const QByteArray &source);
 
-//    QByteArray destination() const;
-//    void setDestination(const QByteArray &destination);
+    QByteArray destination() const;
+    void setDestination(const QByteArray &destination);
 
-//    QByteArray data() const;
-//    void setData(const QByteArray &data);
+    QByteArray data() const;
+    void setData(const QByteArray &data);
+
+    QByteArray toRawMsg() const;
+    static DcpMessage fromRawMsg(const QByteArray &rawMsg);
 
 private:
     void init(const QByteArray &rawMsg);
@@ -66,6 +70,7 @@ public:
     bool waitForDisconnected(int msecs = 30000);
 
     void sendMessage(const QByteArray &rawData);
+    void sendMessage(const DcpMessage &msg);
 
 signals:
     void connected();
