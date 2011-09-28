@@ -14,6 +14,12 @@ enum {
     DcpMessageDataLenPos = 38
 };
 
+enum {
+    DcpPacketHeaderSize = 8,
+    DcpPacketMsgSizePos = 0,
+    DcpPacketOffsetPos = 4
+};
+
 
 // remove trailing characters
 static inline void stripRight(QByteArray &ba, const char c = '\0')
@@ -217,6 +223,7 @@ DcpConnection::DcpConnection(QObject *parent)
             this, SIGNAL(error(QAbstractSocket::SocketError)));
     connect(m_socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
             this, SIGNAL(stateChanged(QAbstractSocket::SocketState)));
+    connect(m_socket, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
 }
 
 void DcpConnection::connectToServer(const QString &hostName, quint16 port)
@@ -269,4 +276,37 @@ void DcpConnection::sendMessage(const DcpMessage &msg)
     m_socket->write(pkgHeader, 8);
     m_socket->write(msg.toRawMsg());
     m_socket->flush();
+}
+
+void DcpConnection::onReadyRead()
+{
+    const int DcpHeaderSize = DcpPacketHeaderSize + DcpMessageHeaderSize;
+
+    // not enough header data
+    if (m_socket->bytesAvailable() < DcpHeaderSize)
+        return;
+
+    char pkgHeader[DcpPacketHeaderSize];
+    m_socket->peek(pkgHeader, DcpPacketHeaderSize);
+
+    const char *pMsgSize = pkgHeader + DcpPacketMsgSizePos;
+    const char *pOffset = pkgHeader + DcpPacketOffsetPos;
+    quint32 msgSize = qFromBigEndian(*reinterpret_cast<const quint32 *>(pMsgSize));
+    quint32 offset = qFromBigEndian(*reinterpret_cast<const quint32 *>(pOffset));
+
+    // not enough data (header + message)
+    if (m_socket->bytesAvailable() < DcpHeaderSize + msgSize)
+        return;
+
+    // remove package header from the input buffer
+    m_socket->read(pkgHeader, DcpPacketHeaderSize);
+
+    // read message data
+    QByteArray rawMsg = m_socket->read(DcpMessageHeaderSize + msgSize);
+    Q_ASSERT(rawMsg.size() == DcpMessageHeaderSize + msgSize);
+
+    DcpMessage msg = DcpMessage::fromRawMsg(rawMsg);
+    qDebug() << msg.flags() << msg.snr()
+             << msg.source() << msg.destination()
+             << msg.data().size() << msg.data();
 }

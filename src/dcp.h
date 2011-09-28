@@ -78,6 +78,9 @@ signals:
     void error(QAbstractSocket::SocketError socketError);
     void stateChanged(QAbstractSocket::SocketState socketState);
 
+private slots:
+    void onReadyRead();
+
 private:
     Q_DISABLE_COPY(DcpConnection)
     QTcpSocket *m_socket;
