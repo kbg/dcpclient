@@ -7,22 +7,6 @@
 class QString;
 class QTimer;
 
-#include <QThread>
-
-class TextInputThread : public QThread
-{
-    Q_OBJECT
-
-public:
-    explicit TextInputThread(QObject *parent = 0);
-
-signals:
-    void lineAvailable(const QString &line);
-
-protected:
-    void run();
-};
-
 
 class EchoServer : public QObject
 {
@@ -41,6 +25,7 @@ protected slots:
     void disconnected();
     void error(QAbstractSocket::SocketError socketError);
     void stateChanged(QAbstractSocket::SocketState socketState);
+    void messageReady();
     void reconnectTimer_timeout();
 
 private:

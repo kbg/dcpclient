@@ -20,6 +20,11 @@ enum {
     DcpPacketOffsetPos = 4
 };
 
+enum {
+    DcpFullHeaderSize = DcpMessageHeaderSize + DcpPacketHeaderSize,
+    DcpMaxPacketSize = 0x10000
+};
+
 
 // remove trailing characters
 static inline void stripRight(QByteArray &ba, const char c = '\0')
@@ -33,14 +38,14 @@ static inline void stripRight(QByteArray &ba, const char c = '\0')
 
 
 DcpMessage::DcpMessage()
-    : m_valid(true),
+    : m_null(true),
       m_flags(0),
       m_snr(0)
 {
 }
 
 DcpMessage::DcpMessage(const DcpMessage &other)
-    : m_valid(other.m_valid),
+    : m_null(other.m_null),
       m_flags(other.m_flags),
       m_snr(other.m_snr),
       m_source(other.m_source),
@@ -65,7 +70,6 @@ void DcpMessage::init(const QByteArray &rawMsg)
     // the message must at least contain the header
     if (rawMsg.size() < DcpMessageHeaderSize) {
         clear();
-        m_valid = false;
         return;
     }
 
@@ -77,7 +81,6 @@ void DcpMessage::init(const QByteArray &rawMsg)
     // check if message size and data size are consistent
     if (rawMsg.size() != DcpMessageHeaderSize + dataSize) {
         clear();
-        m_valid = false;
         return;
     }
 
@@ -99,7 +102,7 @@ void DcpMessage::init(const QByteArray &rawMsg)
 void DcpMessage::init(quint16 flags, quint32 snr, const QByteArray &source,
                       const QByteArray &destination, const QByteArray &data)
 {
-    m_valid = true;
+    m_null = false;
     m_flags = flags;
     m_snr = snr;
     m_source = source;
@@ -113,7 +116,7 @@ void DcpMessage::init(quint16 flags, quint32 snr, const QByteArray &source,
 
 void DcpMessage::clear()
 {
-    m_valid = true;
+    m_null = true;
     m_flags = 0;
     m_snr = 0;
     m_source.clear();
@@ -121,9 +124,9 @@ void DcpMessage::clear()
     m_data.clear();
 }
 
-bool DcpMessage::isValid() const
+bool DcpMessage::isNull() const
 {
-    return m_valid;
+    return m_null;
 }
 
 quint16 DcpMessage::flags() const
@@ -133,7 +136,7 @@ quint16 DcpMessage::flags() const
 
 void DcpMessage::setFlags(quint16 flags)
 {
-    m_valid = true;
+    m_null = false;
     m_flags = flags;
 }
 
@@ -144,7 +147,7 @@ quint32 DcpMessage::snr() const
 
 void DcpMessage::setSnr(quint32 snr)
 {
-    m_valid = true;
+    m_null = false;
     m_snr = snr;
 }
 
@@ -155,7 +158,7 @@ QByteArray DcpMessage::source() const
 
 void DcpMessage::setSource(const QByteArray &source)
 {
-    m_valid = true;
+    m_null = false;
     m_source = source;
     m_source.truncate(DcpMessageDeviceNameSize);
 }
@@ -167,7 +170,7 @@ QByteArray DcpMessage::destination() const
 
 void DcpMessage::setDestination(const QByteArray &destination)
 {
-    m_valid = true;
+    m_null = false;
     m_destination = destination;
     m_destination.truncate(DcpMessageDeviceNameSize);
 }
@@ -179,7 +182,7 @@ QByteArray DcpMessage::data() const
 
 void DcpMessage::setData(const QByteArray &data)
 {
-    m_valid = true;
+    m_null = false;
     m_data = data;
 }
 
@@ -223,7 +226,7 @@ DcpConnection::DcpConnection(QObject *parent)
             this, SIGNAL(error(QAbstractSocket::SocketError)));
     connect(m_socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
             this, SIGNAL(stateChanged(QAbstractSocket::SocketState)));
-    connect(m_socket, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
+    connect(m_socket, SIGNAL(readyRead()), this, SLOT(onSocketReadyRead()));
 }
 
 void DcpConnection::connectToServer(const QString &hostName, quint16 port)
@@ -234,6 +237,53 @@ void DcpConnection::connectToServer(const QString &hostName, quint16 port)
 void DcpConnection::disconnectFromServer()
 {
     m_socket->disconnectFromHost();
+}
+
+void DcpConnection::registerName(const QByteArray &deviceName)
+{
+    DcpMessage msg(0, 0, deviceName, QByteArray(), "HELO");
+    writeMessage(msg);
+}
+
+void DcpConnection::writeMessage(const DcpMessage &msg)
+{
+    if (msg.isNull()) {
+        qWarning("DcpConnection::sendMessage: Ignoring invalid message.");
+        return;
+    }
+
+    if (!msg.data().size() + DcpFullHeaderSize > DcpMaxPacketSize) {
+        qWarning("DcpConnection::sendMessage: Skipping large message. " \
+                 "Multi-packet messages are currently not supported.");
+        return;
+    }
+
+    char pkgHeader[DcpPacketHeaderSize];
+    quint32 *pMsgSize = reinterpret_cast<quint32 *>(
+                pkgHeader + DcpPacketMsgSizePos);
+    quint32 *pOffset = reinterpret_cast<quint32 *>(
+                pkgHeader + DcpPacketOffsetPos);
+
+    *pMsgSize = qToBigEndian(static_cast<quint32>(msg.data().size()));
+    *pOffset = 0;
+
+    m_socket->write(pkgHeader, DcpPacketHeaderSize);
+    m_socket->write(msg.toRawMsg());
+}
+
+bool DcpConnection::flush()
+{
+    return m_socket->flush();
+}
+
+int DcpConnection::messagesAvailable() const
+{
+    return m_inQueue.size();
+}
+
+DcpMessage DcpConnection::readMessage()
+{
+    return m_inQueue.isEmpty() ? DcpMessage() : m_inQueue.dequeue();
 }
 
 QAbstractSocket::SocketError DcpConnection::error() const
@@ -261,52 +311,39 @@ bool DcpConnection::waitForDisconnected(int msecs)
     return m_socket->waitForDisconnected(msecs);
 }
 
-void DcpConnection::sendMessage(const QByteArray &rawData)
+void DcpConnection::onSocketReadyRead()
 {
-    m_socket->write(rawData);
-    m_socket->flush();
-}
+    // stop if not enough header data is available
+    while (m_socket->bytesAvailable() >= DcpFullHeaderSize)
+    {
+        char pkgHeader[DcpPacketHeaderSize];
+        const quint32 *pMsgSize = reinterpret_cast<const quint32 *>(
+                    pkgHeader + DcpPacketMsgSizePos);
+        const quint32 *pOffset = reinterpret_cast<const quint32 *>(
+                    pkgHeader + DcpPacketOffsetPos);
 
-void DcpConnection::sendMessage(const DcpMessage &msg)
-{
-    char pkgHeader[8];
-    *reinterpret_cast<quint32 *>(pkgHeader) = qToBigEndian(
-                static_cast<quint32>(msg.data().size()));
-    *reinterpret_cast<quint32 *>(pkgHeader+4) = 0;
-    m_socket->write(pkgHeader, 8);
-    m_socket->write(msg.toRawMsg());
-    m_socket->flush();
-}
+        m_socket->peek(pkgHeader, DcpPacketHeaderSize);
+        quint32 msgSize = qFromBigEndian(*pMsgSize);
+        quint32 offset = qFromBigEndian(*pOffset);
 
-void DcpConnection::onReadyRead()
-{
-    const int DcpHeaderSize = DcpPacketHeaderSize + DcpMessageHeaderSize;
+        // not enough data (header + message)
+        if (m_socket->bytesAvailable() < DcpFullHeaderSize + msgSize)
+            return;
 
-    // not enough header data
-    if (m_socket->bytesAvailable() < DcpHeaderSize)
-        return;
+        // remove packet header from the input buffer
+        m_socket->read(pkgHeader, DcpPacketHeaderSize);
 
-    char pkgHeader[DcpPacketHeaderSize];
-    m_socket->peek(pkgHeader, DcpPacketHeaderSize);
+        // read message data
+        QByteArray rawMsg = m_socket->read(DcpMessageHeaderSize + msgSize);
 
-    const char *pMsgSize = pkgHeader + DcpPacketMsgSizePos;
-    const char *pOffset = pkgHeader + DcpPacketOffsetPos;
-    quint32 msgSize = qFromBigEndian(*reinterpret_cast<const quint32 *>(pMsgSize));
-    quint32 offset = qFromBigEndian(*reinterpret_cast<const quint32 *>(pOffset));
-
-    // not enough data (header + message)
-    if (m_socket->bytesAvailable() < DcpHeaderSize + msgSize)
-        return;
-
-    // remove package header from the input buffer
-    m_socket->read(pkgHeader, DcpPacketHeaderSize);
-
-    // read message data
-    QByteArray rawMsg = m_socket->read(DcpMessageHeaderSize + msgSize);
-    Q_ASSERT(rawMsg.size() == DcpMessageHeaderSize + msgSize);
-
-    DcpMessage msg = DcpMessage::fromRawMsg(rawMsg);
-    qDebug() << msg.flags() << msg.snr()
-             << msg.source() << msg.destination()
-             << msg.data().size() << msg.data();
+        // ignore multi-packet messages
+        if (offset != 0 || rawMsg.size() != DcpMessageHeaderSize + msgSize) {
+            qWarning("DcpConnection: Ignoring incoming message. " \
+                     "Multi-packet messages are currently not supported.");
+        }
+        else {
+            m_inQueue.enqueue(DcpMessage::fromRawMsg(rawMsg));
+            emit readyRead();
+        }
+    }
 }

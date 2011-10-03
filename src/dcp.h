@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QTcpSocket>
+#include <QQueue>
 
 class QByteArray;
 class QTcpSocket;
@@ -17,7 +18,7 @@ public:
                const QByteArray &destination, const QByteArray &data);
 
     void clear();
-    bool isValid() const;
+    bool isNull() const;
 
     quint16 flags() const;
     void setFlags(quint16 flags);
@@ -43,7 +44,7 @@ private:
               const QByteArray &destination, const QByteArray &data);
 
 private:
-    bool m_valid;
+    bool m_null;
     quint16 m_flags;
     quint32 m_snr;
     QByteArray m_source;
@@ -61,6 +62,13 @@ public:
 
     void connectToServer(const QString &hostName, quint16 port = 2001);
     void disconnectFromServer();
+    void registerName(const QByteArray &deviceName);
+
+    void writeMessage(const DcpMessage &msg);
+    bool flush();
+
+    int messagesAvailable() const;
+    DcpMessage readMessage();
 
     QAbstractSocket::SocketError error() const;
     QString errorString() const;
@@ -69,21 +77,20 @@ public:
     bool waitForConnected(int msecs = 30000);
     bool waitForDisconnected(int msecs = 30000);
 
-    void sendMessage(const QByteArray &rawData);
-    void sendMessage(const DcpMessage &msg);
-
 signals:
     void connected();
     void disconnected();
     void error(QAbstractSocket::SocketError socketError);
     void stateChanged(QAbstractSocket::SocketState socketState);
+    void readyRead();
 
 private slots:
-    void onReadyRead();
+    void onSocketReadyRead();
 
 private:
     Q_DISABLE_COPY(DcpConnection)
     QTcpSocket *m_socket;
+    QQueue<DcpMessage> m_inQueue;
 };
 
 

@@ -2,26 +2,6 @@
 #include <QtDebug>
 #include <QtCore>
 
-
-TextInputThread::TextInputThread(QObject *parent)
-    : QThread(parent)
-{
-}
-
-void TextInputThread::run()
-{
-    QString line;
-    QTextStream is(stdin);
-
-    do {
-        line = is.readLine();
-        emit lineAvailable(line);
-    } while (!line.isNull());
-}
-
-// ---
-
-
 EchoServer::EchoServer(QObject *parent)
     : QObject(parent),
       m_dcp(new DcpConnection(this)),
@@ -33,6 +13,7 @@ EchoServer::EchoServer(QObject *parent)
             this, SLOT(error(QAbstractSocket::SocketError)));
     connect(m_dcp, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
             this, SLOT(stateChanged(QAbstractSocket::SocketState)));
+    connect(m_dcp, SIGNAL(readyRead()), this, SLOT(messageReady()));
     connect(m_reconnectTimer, SIGNAL(timeout()),
             this, SLOT(reconnectTimer_timeout()));
 }
@@ -59,26 +40,8 @@ void EchoServer::disconnectFromServer()
 void EchoServer::connected()
 {
     qDebug() << "Connected.";
-
-    QByteArray src("echo");
-
-    QByteArray a(55, '\0');
-    a[3] = a[49] = 5;
-    a.replace(14, 16, src.leftJustified(16, '\0', true));
-    a.replace(50, 5, "0 ACK");
-
-    DcpMessage msg(a.mid(8));
-    qDebug() << msg.flags() << msg.snr()
-             << msg.source() << msg.destination()
-             << msg.data();
-
-    DcpMessage msg2(0, 0, src, QByteArray(), "0 ACK");
-    qDebug() << msg2.flags() << msg2.snr()
-             << msg2.source() << msg2.destination()
-             << msg2.data();
-
-    m_dcp->sendMessage(a);
-    m_dcp->sendMessage(msg2);
+    m_dcp->registerName("echo");
+    //m_dcp->sendMessage(DcpMessage(0, 0, "echo", "term1126558033", "huhu"));
 }
 
 void EchoServer::disconnected()
@@ -96,9 +59,17 @@ void EchoServer::stateChanged(QAbstractSocket::SocketState socketState)
 {
     qDebug() << "Socket state:" << socketState;
     if (m_dcp->state() == QAbstractSocket::UnconnectedState)
-        m_reconnectTimer->start(1000);
+        m_reconnectTimer->start(3000);
     else
         m_reconnectTimer->stop();
+}
+
+void EchoServer::messageReady()
+{
+    DcpMessage msg = m_dcp->readMessage();
+    qDebug() << msg.flags() << msg.snr()
+             << msg.source() << msg.destination()
+             << msg.data().size() << msg.data();
 }
 
 void EchoServer::reconnectTimer_timeout()

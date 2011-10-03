@@ -21,3 +21,9 @@ int main(int argc, char **argv)
     signal(SIGTERM, exitHandler);
     return app.exec();
 }
+
+/*
+dcpDump
+grecoTerm
+grecoEcho
+*/
