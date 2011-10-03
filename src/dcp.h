@@ -74,8 +74,10 @@ public:
     QString errorString() const;
     QAbstractSocket::SocketState state() const;
 
-    bool waitForConnected(int msecs = 30000);
-    bool waitForDisconnected(int msecs = 30000);
+    bool waitForConnected(int msecs = 10000);
+    bool waitForDisconnected(int msecs = 10000);
+    bool waitForReadyRead(int msecs = 10000);
+    bool waitForMessagesWritten(int msecs = 10000);
 
 signals:
     void connected();
@@ -85,7 +87,7 @@ signals:
     void readyRead();
 
 private slots:
-    void onSocketReadyRead();
+    void readMessagesFromSocket();
 
 private:
     Q_DISABLE_COPY(DcpConnection)

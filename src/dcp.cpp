@@ -3,6 +3,7 @@
 #include <QByteArray>
 #include <QTcpSocket>
 #include <QtEndian>
+#include <QElapsedTimer>
 
 enum {
     DcpMessageHeaderSize = 42,
@@ -26,7 +27,9 @@ enum {
 };
 
 
-// remove trailing characters
+/*
+    Removes all trailing characters with value c from the given byte array.
+*/
 static inline void stripRight(QByteArray &ba, const char c = '\0')
 {
     int i = ba.size() - 1;
@@ -34,6 +37,20 @@ static inline void stripRight(QByteArray &ba, const char c = '\0')
         if (ba.at(i) != c)
             break;
     ba.truncate(i+1);
+}
+
+
+/*
+    Returns the time left for a timeout value, i.e. the time difference
+    between msecs and elapsed with a lower bound of 0, or -1 if msecs has
+    a value of -1.
+ */
+static int timeoutValue(int msecs, int elapsed)
+{
+    if (msecs == -1)
+        return -1;
+    int msecsLeft = msecs - elapsed;
+    return msecsLeft < 0 ? 0 : msecsLeft;
 }
 
 
@@ -226,7 +243,7 @@ DcpConnection::DcpConnection(QObject *parent)
             this, SIGNAL(error(QAbstractSocket::SocketError)));
     connect(m_socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
             this, SIGNAL(stateChanged(QAbstractSocket::SocketState)));
-    connect(m_socket, SIGNAL(readyRead()), this, SLOT(onSocketReadyRead()));
+    connect(m_socket, SIGNAL(readyRead()), this, SLOT(readMessagesFromSocket()));
 }
 
 void DcpConnection::connectToServer(const QString &hostName, quint16 port)
@@ -243,6 +260,7 @@ void DcpConnection::registerName(const QByteArray &deviceName)
 {
     DcpMessage msg(0, 0, deviceName, QByteArray(), "HELO");
     writeMessage(msg);
+    flush();
 }
 
 void DcpConnection::writeMessage(const DcpMessage &msg)
@@ -311,7 +329,46 @@ bool DcpConnection::waitForDisconnected(int msecs)
     return m_socket->waitForDisconnected(msecs);
 }
 
-void DcpConnection::onSocketReadyRead()
+bool DcpConnection::waitForReadyRead(int msecs)
+{
+    QElapsedTimer stopWatch;
+    stopWatch.start();
+
+    while (messagesAvailable() == 0)
+    {
+        int msecsLeft = timeoutValue(msecs, stopWatch.elapsed());
+        if (msecsLeft == 0)
+            return false;
+
+        if (!m_socket->waitForReadyRead(msecsLeft))
+            return false;
+
+        // try to read messages
+        readMessagesFromSocket();
+    }
+
+    return true;
+}
+
+bool DcpConnection::waitForMessagesWritten(int msecs)
+{
+    QElapsedTimer stopWatch;
+    stopWatch.start();
+
+    while(m_socket->bytesToWrite() != 0)
+    {
+        int msecsLeft = timeoutValue(msecs, stopWatch.elapsed());
+        if (msecsLeft == 0)
+            return false;
+
+        if (!m_socket->waitForBytesWritten(msecsLeft))
+            return false;
+    }
+
+    return true;
+}
+
+void DcpConnection::readMessagesFromSocket()
 {
     // stop if not enough header data is available
     while (m_socket->bytesAvailable() >= DcpFullHeaderSize)
