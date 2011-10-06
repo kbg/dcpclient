@@ -7,12 +7,14 @@ include(${QT_USE_FILE})
 ##
 
 set(dcpclient_MOC_HDRS
-  src/dcp.h)
+  src/dcpconnection.h)
 qt4_wrap_cpp(dcpclient_MOC_SCRS ${dcpclient_MOC_HDRS})
 
 set(dcpclient_SRCS
   ${dcpclient_MOC_SCRS}
-  src/dcp.cpp
+  src/dcpmessage.cpp
+  src/dcpconnection.cpp
+  src/dcp_p.cpp
 )
 
 ##
@@ -43,16 +45,10 @@ target_link_libraries(dcpListen ${QT_LIBRARIES})
 
 ##
 
-#set(dcpEcho_MOC_HDRS
-#  src/echoserver.h)
-#qt4_wrap_cpp(dcpEcho_MOC_SCRS ${dcpEcho_MOC_HDRS})
-#
-#set(dcpEcho_SRCS
-#  ${dcpEcho_MOC_SCRS}
-#  ${dcpclient_SRCS}
-#  src/dcpecho.cpp
-#  src/echoserver.cpp
-#)
-#
-#add_executable(dcpEcho ${dcpEcho_SRCS})
-#target_link_libraries(dcpEcho ${QT_LIBRARIES})
+set(dcpSend_SRCS
+  ${dcpclient_SRCS}
+  src/dcpsend.cpp
+)
+
+add_executable(dcpSend ${dcpSend_SRCS})
+target_link_libraries(dcpSend ${QT_LIBRARIES})

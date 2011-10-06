@@ -1,17 +1,8 @@
 #include "dcpdump.h"
-#include <QtDebug>
+#include "dcp.h"
 #include <QtCore>
 
-static QTextStream qout(stdout, QIODevice::WriteOnly);
-static QTextStream & operator << (QTextStream &os, const DcpMessage &msg) {
-    return os
-       << hex << "0x" << msg.flags() << dec << " "
-       << "#" << msg.snr() << " "
-       << msg.source() << " -> "
-       << msg.destination() << " "
-       << "[" << msg.data().size() << "] "
-       << msg.data();
-}
+static QTextStream cout(stdout, QIODevice::WriteOnly);
 
 DcpDump::DcpDump(QObject *parent)
     : QObject(parent),
@@ -65,18 +56,18 @@ void DcpDump::setDeviceMap(const QMap<QByteArray, QByteArray> &deviceMap)
 
 void DcpDump::connected()
 {
-    qout << "Connected [" << m_deviceName << "]." << endl;
+    cout << "Connected [" << m_deviceName << "]." << endl;
     m_dcp->registerName(m_deviceName);
 }
 
 void DcpDump::disconnected()
 {
-    qout << "Disconnected." << endl;
+    cout << "Disconnected." << endl;
 }
 
 void DcpDump::error(QAbstractSocket::SocketError socketError)
 {
-    qout << m_dcp->errorString() << "." << endl;
+    cout << m_dcp->errorString() << "." << endl;
 }
 
 void DcpDump::stateChanged(QAbstractSocket::SocketState socketState)
@@ -89,7 +80,7 @@ void DcpDump::stateChanged(QAbstractSocket::SocketState socketState)
             m_reconnectTimer->start();
         break;
     case QAbstractSocket::ConnectingState:
-        qout << "Connecting [" << m_serverName << ":" << m_serverPort
+        cout << "Connecting [" << m_serverName << ":" << m_serverPort
                 << "]..." << endl;
     default:
         m_reconnectTimer->stop();
@@ -99,23 +90,24 @@ void DcpDump::stateChanged(QAbstractSocket::SocketState socketState)
 void DcpDump::messageReady()
 {
     DcpMessage msg = m_dcp->readMessage();
-
     QByteArray source = msg.source();
-    if (m_deviceMap.contains(source))
-    {
+    if (m_deviceMap.contains(source)) {
         msg.setSource(msg.destination());
         msg.setDestination(m_deviceMap[source]);
         m_dcp->writeMessage(msg);
-        qout << hex << "0x" << msg.flags() << dec << " "
-             << "#" << msg.snr() << " "
-             << source << " -> "
-             << msg.source() << " -> "
-             << msg.destination() << " "
-             << "[" << msg.data().size() << "] "
-             << msg.data() << endl;
     }
-    else
-        qout << msg << endl;
+
+    cout << (msg.hasPaceFlag() ? "p" : "-")
+         << (msg.hasGrecoFlag() ? "g" : "-")
+         << (msg.hasUrgentFlag() ? "u" : "-")
+         << (msg.hasReplyFlag() ? "r" : "-")
+         << hex << " [0x" << msg.flags() << dec << "] "
+         << "#" << msg.snr() << " "
+         << (m_deviceMap.contains(source) ? (source + " -> ") : "")
+         << msg.source() << " -> "
+         << msg.destination() << " "
+         << "[" << msg.data().size() << "] "
+         << msg.data() << endl;
 }
 
 void DcpDump::reconnectTimer_timeout()

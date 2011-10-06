@@ -1,11 +1,11 @@
 #ifndef DCPDUMP_H
 #define DCPDUMP_H
 
-#include "dcp.h"
-#include <QObject>
-#include <QString>
-#include <QByteArray>
-#include <QMap>
+#include <QtCore/QObject>
+#include <QtCore/QString>
+#include <QtCore/QByteArray>
+#include <QtCore/QMap>
+#include <QtNetwork/QAbstractSocket>
 
 class QTimer;
 class DcpConnection;

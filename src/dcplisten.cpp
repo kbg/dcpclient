@@ -1,16 +1,19 @@
 #include "dcp.h"
-#include "QCoreApplication"
-#include <QTextStream>
+#include <QtCore>
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);
 static QTextStream & operator << (QTextStream &os, const DcpMessage &msg) {
     return os
-       << hex << "0x" << msg.flags() << dec << " "
-       << "#" << msg.snr() << " "
-       << msg.source() << " -> "
-       << msg.destination() << " "
-       << "[" << msg.data().size() << "] "
-       << msg.data();
+        << (msg.hasPaceFlag() ? "p" : "-")
+        << (msg.hasGrecoFlag() ? "g" : "-")
+        << (msg.hasUrgentFlag() ? "u" : "-")
+        << (msg.hasReplyFlag() ? "r" : "-")
+        << hex << " [0x" << msg.flags() << dec << "] "
+        << "#" << msg.snr() << " "
+        << msg.source() << " -> "
+        << msg.destination() << " "
+        << "[" << msg.data().size() << "] "
+        << msg.data();
 }
 
 int main(int argc, char **argv)
@@ -22,7 +25,7 @@ int main(int argc, char **argv)
     DcpConnection dcp;
     QString hostName = "localhost";
     quint16 port = 2001;
-    QByteArray deviceName = "listener";
+    QByteArray deviceName = "dcplisten";
 
     cout << "Connecting [" << hostName << ":" << port << "]..." << flush;
     dcp.connectToServer(hostName, port);
@@ -41,7 +44,7 @@ int main(int argc, char **argv)
     }
     cout << " Done." << endl;
 
-    // Wait for incomming messags and print them until a message ist
+    // Wait for incomming messags and print them until a message is
     // received that contains the word `quit'.
     cout << "Waiting for incomming message..." << endl;
     while (true)
