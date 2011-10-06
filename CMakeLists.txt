@@ -27,7 +27,7 @@ set(dcpDump_SRCS
   ${dcpDump_MOC_SCRS}
   ${dcpclient_SRCS}
   src/dcpdump.cpp
-  src/dcpdumpmain.cpp
+  src/dcpdump_main.cpp
 )
 
 add_executable(dcpDump ${dcpDump_SRCS})
