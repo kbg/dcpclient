@@ -24,7 +24,7 @@
  */
 
 #include "dcpdump.h"
-#include "dcp.h"
+#include <dcp.h>
 #include <QtCore>
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);
@@ -122,10 +122,10 @@ void DcpDump::messageReady()
         m_dcp->writeMessage(msg);
     }
 
-    cout << (msg.hasPaceFlag() ? "p" : "-")
-         << (msg.hasGrecoFlag() ? "g" : "-")
-         << (msg.hasUrgentFlag() ? "u" : "-")
-         << (msg.hasReplyFlag() ? "r" : "-")
+    cout << ((msg.flags() & DcpMessage::PaceFlag) != 0 ? "p" : "-")
+         << ((msg.flags() & DcpMessage::GrecoFlag) != 0 ? "g" : "-")
+         << (msg.isUrgent() ? "u" : "-")
+         << (msg.isReply() ? "r" : "-")
          << hex << " [0x" << msg.flags() << dec << "] "
          << "#" << msg.snr() << " "
          << (m_deviceMap.contains(source) ? (source + " -> ") : "")
@@ -140,3 +140,5 @@ void DcpDump::reconnectTimer_timeout()
     if (m_dcp->state() == QAbstractSocket::UnconnectedState)
         m_dcp->connectToServer(m_serverName, m_serverPort);
 }
+
+#include "dcpdump.moc"

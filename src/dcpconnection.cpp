@@ -27,31 +27,90 @@
 #include "dcpmessage.h"
 #include "dcp_p.h"
 #include <QtCore/QByteArray>
+#include <QtCore/QQueue>
 #include <QtCore/QtEndian>
 #include <QtCore/QElapsedTimer>
 #include <QtNetwork/QTcpSocket>
 
+class DcpConnectionPrivate
+{
+public:
+    DcpConnectionPrivate(DcpConnection *qq) : q(qq) {}
+
+    // private slots
+    void _k_readMessagesFromSocket();
+
+    // private data
+    DcpConnection * const q;
+    QTcpSocket socket;
+    QQueue<DcpMessage> inQueue;
+};
+
+void DcpConnectionPrivate::_k_readMessagesFromSocket()
+{
+    // stop if not enough header data is available
+    while (socket.bytesAvailable() >= DcpFullHeaderSize)
+    {
+        char pkgHeader[DcpPacketHeaderSize];
+        const quint32 *pMsgSize = reinterpret_cast<const quint32 *>(
+                    pkgHeader + DcpPacketMsgSizePos);
+        const quint32 *pOffset = reinterpret_cast<const quint32 *>(
+                    pkgHeader + DcpPacketOffsetPos);
+
+        socket.peek(pkgHeader, DcpPacketHeaderSize);
+        quint32 msgSize = qFromBigEndian(*pMsgSize);
+        quint32 offset = qFromBigEndian(*pOffset);
+
+        // not enough data (header + message)
+        if (socket.bytesAvailable() < DcpFullHeaderSize + msgSize)
+            return;
+
+        // remove packet header from the input buffer
+        socket.read(pkgHeader, DcpPacketHeaderSize);
+
+        // read message data
+        QByteArray rawMsg = socket.read(DcpMessageHeaderSize + msgSize);
+
+        // ignore multi-packet messages
+        if (offset != 0 || rawMsg.size() != DcpMessageHeaderSize + msgSize) {
+            qWarning("DcpConnection: Ignoring incoming message. " \
+                     "Multi-packet messages are currently not supported.");
+        }
+        else {
+            inQueue.enqueue(DcpMessage::fromRawMsg(rawMsg));
+            emit q->readyRead();
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+
 DcpConnection::DcpConnection(QObject *parent)
     : QObject(parent),
-      m_socket(new QTcpSocket(this))
+      d(new DcpConnectionPrivate(this))
 {
-    connect(m_socket, SIGNAL(connected()), this, SIGNAL(connected()));
-    connect(m_socket, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
-    connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)),
-            this, SIGNAL(error(QAbstractSocket::SocketError)));
-    connect(m_socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
-            this, SIGNAL(stateChanged(QAbstractSocket::SocketState)));
-    connect(m_socket, SIGNAL(readyRead()), this, SLOT(readMessagesFromSocket()));
+    connect(&d->socket, SIGNAL(connected()), SIGNAL(connected()));
+    connect(&d->socket, SIGNAL(disconnected()), SIGNAL(disconnected()));
+    connect(&d->socket, SIGNAL(error(QAbstractSocket::SocketError)),
+                        SIGNAL(error(QAbstractSocket::SocketError)));
+    connect(&d->socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
+                        SIGNAL(stateChanged(QAbstractSocket::SocketState)));
+    connect(&d->socket, SIGNAL(readyRead()), SLOT(_k_readMessagesFromSocket()));
+}
+
+DcpConnection::~DcpConnection()
+{
+    delete d;
 }
 
 void DcpConnection::connectToServer(const QString &hostName, quint16 port)
 {
-    m_socket->connectToHost(hostName, port);
+    d->socket.connectToHost(hostName, port);
 }
 
 void DcpConnection::disconnectFromServer()
 {
-    m_socket->disconnectFromHost();
+    d->socket.disconnectFromHost();
 }
 
 void DcpConnection::registerName(const QByteArray &deviceName)
@@ -83,48 +142,48 @@ void DcpConnection::writeMessage(const DcpMessage &msg)
     *pMsgSize = qToBigEndian(static_cast<quint32>(msg.data().size()));
     *pOffset = 0;
 
-    m_socket->write(pkgHeader, DcpPacketHeaderSize);
-    m_socket->write(msg.toRawMsg());
+    d->socket.write(pkgHeader, DcpPacketHeaderSize);
+    d->socket.write(msg.toRawMsg());
 }
 
 bool DcpConnection::flush()
 {
-    return m_socket->flush();
+    return d->socket.flush();
 }
 
 int DcpConnection::messagesAvailable() const
 {
-    return m_inQueue.size();
+    return d->inQueue.size();
 }
 
 DcpMessage DcpConnection::readMessage()
 {
-    return m_inQueue.isEmpty() ? DcpMessage() : m_inQueue.dequeue();
+    return d->inQueue.isEmpty() ? DcpMessage() : d->inQueue.dequeue();
 }
 
 QAbstractSocket::SocketError DcpConnection::error() const
 {
-    return m_socket->error();
+    return d->socket.error();
 }
 
 QString DcpConnection::errorString() const
 {
-    return m_socket->errorString();
+    return d->socket.errorString();
 }
 
 QAbstractSocket::SocketState DcpConnection::state() const
 {
-    return m_socket->state();
+    return d->socket.state();
 }
 
 bool DcpConnection::waitForConnected(int msecs)
 {
-    return m_socket->waitForConnected(msecs);
+    return d->socket.waitForConnected(msecs);
 }
 
 bool DcpConnection::waitForDisconnected(int msecs)
 {
-    return m_socket->waitForDisconnected(msecs);
+    return d->socket.waitForDisconnected(msecs);
 }
 
 bool DcpConnection::waitForReadyRead(int msecs)
@@ -135,11 +194,11 @@ bool DcpConnection::waitForReadyRead(int msecs)
     while (messagesAvailable() == 0)
     {
         int msecsLeft = timeoutValue(msecs, stopWatch.elapsed());
-        if (!m_socket->waitForReadyRead(msecsLeft))
+        if (!d->socket.waitForReadyRead(msecsLeft))
             return false;
 
         // try to read messages
-        readMessagesFromSocket();
+        d->_k_readMessagesFromSocket();
 
         if (msecsLeft == 0)
             break;
@@ -153,52 +212,17 @@ bool DcpConnection::waitForMessagesWritten(int msecs)
     QElapsedTimer stopWatch;
     stopWatch.start();
 
-    while(m_socket->bytesToWrite() != 0)
+    while(d->socket.bytesToWrite() != 0)
     {
         int msecsLeft = timeoutValue(msecs, stopWatch.elapsed());
         if (msecsLeft == 0)
             break;
 
-        if (!m_socket->waitForBytesWritten(msecsLeft))
+        if (!d->socket.waitForBytesWritten(msecsLeft))
             return false;
     }
 
-    return m_socket->bytesToWrite() == 0;
+    return d->socket.bytesToWrite() == 0;
 }
 
-void DcpConnection::readMessagesFromSocket()
-{
-    // stop if not enough header data is available
-    while (m_socket->bytesAvailable() >= DcpFullHeaderSize)
-    {
-        char pkgHeader[DcpPacketHeaderSize];
-        const quint32 *pMsgSize = reinterpret_cast<const quint32 *>(
-                    pkgHeader + DcpPacketMsgSizePos);
-        const quint32 *pOffset = reinterpret_cast<const quint32 *>(
-                    pkgHeader + DcpPacketOffsetPos);
-
-        m_socket->peek(pkgHeader, DcpPacketHeaderSize);
-        quint32 msgSize = qFromBigEndian(*pMsgSize);
-        quint32 offset = qFromBigEndian(*pOffset);
-
-        // not enough data (header + message)
-        if (m_socket->bytesAvailable() < DcpFullHeaderSize + msgSize)
-            return;
-
-        // remove packet header from the input buffer
-        m_socket->read(pkgHeader, DcpPacketHeaderSize);
-
-        // read message data
-        QByteArray rawMsg = m_socket->read(DcpMessageHeaderSize + msgSize);
-
-        // ignore multi-packet messages
-        if (offset != 0 || rawMsg.size() != DcpMessageHeaderSize + msgSize) {
-            qWarning("DcpConnection: Ignoring incoming message. " \
-                     "Multi-packet messages are currently not supported.");
-        }
-        else {
-            m_inQueue.enqueue(DcpMessage::fromRawMsg(rawMsg));
-            emit readyRead();
-        }
-    }
-}
+#include "dcpconnection.moc"

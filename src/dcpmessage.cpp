@@ -141,22 +141,36 @@ void DcpMessage::setFlags(quint16 flags)
     m_flags = flags;
 }
 
-bool DcpMessage::hasPaceFlag() const
+quint8 DcpMessage::dcpFlags() const
 {
-    return (m_flags & PaceFlag) != 0;
+    return quint8(m_flags & 0x00ff);
 }
 
-bool DcpMessage::hasGrecoFlag() const
+void DcpMessage::setDcpFlags(quint8 flags)
 {
-    return (m_flags & GrecoFlag) != 0;
+    m_null = false;
+    m_flags &= 0xff00;
+    m_flags |= quint16(flags);
 }
 
-bool DcpMessage::hasUrgentFlag() const
+quint8 DcpMessage::userFlags() const
+{
+    return quint8(m_flags >> 8);
+}
+
+void DcpMessage::setUserFlags(quint8 flags)
+{
+    m_null = false;
+    m_flags &= 0x00ff;
+    m_flags |= quint16(flags) << 8;
+}
+
+bool DcpMessage::isUrgent() const
 {
     return (m_flags & UrgentFlag) != 0;
 }
 
-bool DcpMessage::hasReplyFlag() const
+bool DcpMessage::isReply() const
 {
     return (m_flags & ReplyFlag) != 0;
 }

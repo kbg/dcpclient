@@ -32,10 +32,10 @@ class DcpMessage
 {
 public:
     enum {
-        PaceFlag   = 0x01,
-        GrecoFlag  = 0x02,
-        UrgentFlag = 0x04,
-        ReplyFlag  = 0x08
+        PaceFlag   = 0x1,
+        GrecoFlag  = 0x2,
+        UrgentFlag = 0x4,
+        ReplyFlag  = 0x8
     };
 
     DcpMessage();
@@ -49,10 +49,15 @@ public:
 
     quint16 flags() const;
     void setFlags(quint16 flags);
-    bool hasPaceFlag() const;
-    bool hasGrecoFlag() const;
-    bool hasUrgentFlag() const;
-    bool hasReplyFlag() const;
+
+    quint8 dcpFlags() const;
+    void setDcpFlags(quint8 flags);
+
+    quint8 userFlags() const;
+    void setUserFlags(quint8 flags);
+
+    bool isUrgent() const;
+    bool isReply() const;
 
     quint32 snr() const;
     void setSnr(quint32 snr);

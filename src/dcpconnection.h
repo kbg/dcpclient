@@ -28,18 +28,18 @@
 
 #include "dcpmessage.h"
 #include <QtCore/QObject>
-#include <QtCore/QQueue>
 #include <QtNetwork/QAbstractSocket>
 
 class QByteArray;
-class QTcpSocket;
 
+class DcpConnectionPrivate;
 class DcpConnection : public QObject
 {
     Q_OBJECT
 
 public:
     explicit DcpConnection(QObject *parent = 0);
+    virtual ~DcpConnection();
 
     void connectToServer(const QString &hostName, quint16 port = 2001);
     void disconnectFromServer();
@@ -67,16 +67,11 @@ signals:
     void stateChanged(QAbstractSocket::SocketState socketState);
     void readyRead();
 
-private slots:
-    //! \todo Use Q_PRIVATE_SLOT().
-    void readMessagesFromSocket();
-
 private:
+    Q_PRIVATE_SLOT(d, void _k_readMessagesFromSocket())
     Q_DISABLE_COPY(DcpConnection)
-
-    //! \todo Use Q_DECLARE_PRIVATE().
-    QTcpSocket *m_socket;
-    QQueue<DcpMessage> m_inQueue;
+    friend class DcpConnectionPrivate;
+    DcpConnectionPrivate * const d;
 };
 
 #endif // DCPCONNECTION_H

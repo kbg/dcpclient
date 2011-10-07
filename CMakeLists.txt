@@ -6,49 +6,49 @@ include(${QT_USE_FILE})
 
 ##
 
-set(dcpclient_MOC_HDRS
-  src/dcpconnection.h)
-qt4_wrap_cpp(dcpclient_MOC_SCRS ${dcpclient_MOC_HDRS})
+include_directories(
+  ${CMAKE_BINARY_DIR}
+  ${CMAKE_SOURCE_DIR}/src)
+
+##
 
 set(dcpclient_SRCS
-  ${dcpclient_MOC_SCRS}
   src/dcpmessage.cpp
   src/dcpconnection.cpp
+  src/dcpclient.cpp
   src/dcp_p.cpp
+  src/dcp.cpp
 )
+qt4_automoc(${dcpclient_SRCS})
 
 ##
 
-set(dcpDump_MOC_HDRS
-  src/dcpdump.h)
-qt4_wrap_cpp(dcpDump_MOC_SCRS ${dcpDump_MOC_HDRS})
-
-set(dcpDump_SRCS
-  ${dcpDump_MOC_SCRS}
+set(dcpdump_SRCS
   ${dcpclient_SRCS}
-  src/dcpdump.cpp
-  src/dcpdump_main.cpp
+  src/examples/dcpdump.cpp
+  src/examples/dcpdump_main.cpp
 )
+qt4_automoc(${dcpdump_SRCS})
 
-add_executable(dcpDump ${dcpDump_SRCS})
-target_link_libraries(dcpDump ${QT_LIBRARIES})
+add_executable(dcpdump ${dcpdump_SRCS})
+target_link_libraries(dcpdump ${QT_LIBRARIES})
 
 ##
 
-set(dcpListen_SRCS
+set(dcplisten_SRCS
   ${dcpclient_SRCS}
-  src/dcplisten.cpp
+  src/examples/dcplisten.cpp
 )
 
-add_executable(dcpListen ${dcpListen_SRCS})
-target_link_libraries(dcpListen ${QT_LIBRARIES})
+add_executable(dcplisten ${dcplisten_SRCS})
+target_link_libraries(dcplisten ${QT_LIBRARIES})
 
 ##
 
-set(dcpSend_SRCS
+set(dcpsend_SRCS
   ${dcpclient_SRCS}
-  src/dcpsend.cpp
+  src/examples/dcpsend.cpp
 )
 
-add_executable(dcpSend ${dcpSend_SRCS})
-target_link_libraries(dcpSend ${QT_LIBRARIES})
+add_executable(dcpsend ${dcpsend_SRCS})
+target_link_libraries(dcpsend ${QT_LIBRARIES})

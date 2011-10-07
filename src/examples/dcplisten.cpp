@@ -23,16 +23,16 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "dcp.h"
+#include <dcp.h>
 #include <QtCore>
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);
 static QTextStream & operator << (QTextStream &os, const DcpMessage &msg) {
     return os
-        << (msg.hasPaceFlag() ? "p" : "-")
-        << (msg.hasGrecoFlag() ? "g" : "-")
-        << (msg.hasUrgentFlag() ? "u" : "-")
-        << (msg.hasReplyFlag() ? "r" : "-")
+        << ((msg.flags() & DcpMessage::PaceFlag) != 0 ? "p" : "-")
+        << ((msg.flags() & DcpMessage::GrecoFlag) != 0 ? "g" : "-")
+        << (msg.isUrgent() ? "u" : "-")
+        << (msg.isReply() ? "r" : "-")
         << hex << " [0x" << msg.flags() << dec << "] "
         << "#" << msg.snr() << " "
         << msg.source() << " -> "
