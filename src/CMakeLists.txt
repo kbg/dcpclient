@@ -1,0 +1,7 @@
+add_subdirectory(dcpclient)
+if(BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
+if(BUILD_TOOLS)
+    add_subdirectory(tools)
+endif()

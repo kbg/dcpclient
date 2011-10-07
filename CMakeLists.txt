@@ -2,53 +2,20 @@ project(dcpclient)
 cmake_minimum_required(VERSION 2.8)
 
 find_package(Qt4 4.7.0 COMPONENTS QtCore QtNetwork REQUIRED)
-include(${QT_USE_FILE})
 
-##
+set(DCPCLIENT_VERSION_MAJOR 0)
+set(DCPCLIENT_VERSION_MINOR 1)
+set(DCPCLIENT_VERSION_RELEASE 0)
+set(DCPCLIENT_VERSION "${DCPCLIENT_VERSION_MAJOR}.${DCPCLIENT_VERSION_MINOR}.${DCPCLIENT_VERSION_RELEASE}")
 
-include_directories(
-  ${CMAKE_BINARY_DIR}
-  ${CMAKE_SOURCE_DIR}/src)
+set(DCPCLIENT_LIB_VERSION ${DCPCLIENT_VERSION})
+set(DCPCLIENT_LIB_SOVERSION ${DCPCLIENT_VERSION_MAJOR})
 
-##
+option(BUILD_STATIC_LIBRARY "Build dcpclient as static library." FALSE)
+option(BUILD_TOOLS "Build utility programs." FALSE)
+option(BUILD_EXAMPLES "Build example programs." FALSE)
 
-set(dcpclient_SRCS
-  src/dcpmessage.cpp
-  src/dcpconnection.cpp
-  src/dcpclient.cpp
-  src/dcp_p.cpp
-  src/dcp.cpp
-)
-qt4_automoc(${dcpclient_SRCS})
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
+set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
-##
-
-set(dcpdump_SRCS
-  ${dcpclient_SRCS}
-  src/examples/dcpdump.cpp
-  src/examples/dcpdump_main.cpp
-)
-qt4_automoc(${dcpdump_SRCS})
-
-add_executable(dcpdump ${dcpdump_SRCS})
-target_link_libraries(dcpdump ${QT_LIBRARIES})
-
-##
-
-set(dcplisten_SRCS
-  ${dcpclient_SRCS}
-  src/examples/dcplisten.cpp
-)
-
-add_executable(dcplisten ${dcplisten_SRCS})
-target_link_libraries(dcplisten ${QT_LIBRARIES})
-
-##
-
-set(dcpsend_SRCS
-  ${dcpclient_SRCS}
-  src/examples/dcpsend.cpp
-)
-
-add_executable(dcpsend ${dcpsend_SRCS})
-target_link_libraries(dcpsend ${QT_LIBRARIES})
+add_subdirectory(src)
