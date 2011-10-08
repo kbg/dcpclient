@@ -164,7 +164,7 @@ int main(int argc, char **argv)
     else if (opts.help) return 0;
 
     DcpDump dump;
-    dump.connectToServer(opts.deviceName, opts.serverName, opts.serverPort);
+    dump.connectToServer(opts.serverName, opts.serverPort, opts.deviceName);
     dump.setDeviceMap(opts.deviceMap);
 
     return app.exec();

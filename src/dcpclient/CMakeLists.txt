@@ -9,11 +9,9 @@ include_directories(
 )
 
 set(libDcpClient_SRCS
-    dcpmessage.cpp
-    dcpconnection.cpp
     dcpclient.cpp
+    dcpmessage.cpp
     dcp_p.cpp
-    dcp.cpp
 )
 qt4_automoc(${libDcpClient_SRCS})
 

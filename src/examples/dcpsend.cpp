@@ -23,7 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <dcp.h>
+#include <dcpclient.h>
+#include <dcpmessage.h>
 #include <QtCore/QtCore>
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);
@@ -197,8 +198,8 @@ int main(int argc, char **argv)
     else if (opts.help) return 0;
 
     // Connect to DCP server
-    DcpConnection dcp;
-    dcp.connectToServer(opts.serverName, opts.serverPort);
+    DcpClient dcp;
+    dcp.connectToServer(opts.serverName, opts.serverPort, opts.deviceName);
     if (!dcp.waitForConnected()) {
         cerr << "Error: " << dcp.errorString() << endl;
         return 1;
@@ -207,12 +208,6 @@ int main(int argc, char **argv)
     // Stop the time since the connection was established
     QElapsedTimer stopWatch;
     stopWatch.start();
-
-    dcp.registerName(opts.deviceName);
-    if (!dcp.waitForMessagesWritten()) {
-        cerr << "Error: " << dcp.errorString() << endl;
-        return 1;
-    }
 
     QString line;
     quint32 snr = 0;
@@ -234,7 +229,7 @@ int main(int argc, char **argv)
             {
                 msg.setSnr(++snr);
                 msg.setDestination(dest);
-                dcp.writeMessage(msg);
+                dcp.sendMessage(msg);
                 if (opts.verbose)
                     cout << msg << endl;
             }
@@ -281,9 +276,7 @@ int main(int argc, char **argv)
 
     // Disconnect from DCP server
     dcp.disconnectFromServer();
-    if (dcp.state() != QAbstractSocket::UnconnectedState
-            && !dcp.waitForDisconnected())
-    {
+    if (!dcp.waitForDisconnected()) {
         cerr << "Error: " << dcp.errorString() << endl;
         return 1;
     }

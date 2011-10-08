@@ -30,18 +30,16 @@
 
 class QByteArray;
 class QString;
-
 class DcpMessage;
 
-class MessageValidator {
-public:
-    virtual bool isValid(const DcpMessage &msg) const = 0;
+class DcpMessageParser {
 };
 
 class DcpClientPrivate;
 class DcpClient : public QObject
 {
     Q_OBJECT
+    Q_ENUMS(State Error)
 
 public:
     enum State {
@@ -49,8 +47,6 @@ public:
         HostLookupState,
         ConnectingState,
         ConnectedState,
-        //BoundState,  // Servers only
-        //ListeningState,  // Servers only
         ClosingState
     };
 
@@ -61,50 +57,53 @@ public:
         SocketAccessError,
         SocketResourceError,
         SocketTimeoutError,
-        //DatagramTooLargeError,  // QUdpSocket only
         NetworkError,
-        //AddressInUseError,  // QUdpSocket only
-        //SocketAddressNotAvailableError,  // QUdpSocket only
         UnsupportedSocketOperationError,
-        //UnfinishedSocketOperationError,  // QAbstractSocketEngine only
-        //ProxyAuthenticationRequiredError,  // No proxy support
-        //SslHandshakeFailedError,  // QSslSocket only
-        //ProxyConnectionRefusedError,  // No proxy support
-        //ProxyConnectionClosedError,  // No proxy support
-        //ProxyConnectionTimeoutError,  // No proxy support
-        //ProxyNotFoundError,  // No proxy support
-        //ProxyProtocolError,  // No proxy support
-        UnknownSocketError = -1
+        UnknownSocketError
     };
 
-    explicit DcpClient(QObject *parent);
+    explicit DcpClient(QObject *parent = 0);
     virtual ~DcpClient();
 
-    void connectToServer(const QByteArray &deviceName,
-                         const QString &serverName, quint16 serverPort);
+    void connectToServer(const QString &serverName, quint16 serverPort,
+                         const QByteArray &deviceName);
     void disconnectFromServer();
 
-    Error error() const;
-    State state() const;
+    void sendMessage(const DcpMessage &message);
+    int messagesAvailable() const;
+    DcpMessage readMessage();
 
-    bool autoAckEnabled() const;
-    void setAutoAckEnabled();
-    const MessageValidator * autoAckValidator() const;
-    void setAutoAckValidator(const MessageValidator *validator);
+    DcpClient::State state() const;
+    DcpClient::Error error() const;
+    QString errorString() const;
 
-    bool reconnectEnabled() const;
-    void setReconnectEnabled();
+    QString serverName() const;
+    quint16 serverPort() const;
+    QByteArray deviceName() const;
+
+    bool autoReconnect() const;
+    void setAutoReconnect(bool enable);
     int reconnectInterval() const;
     void setReconnectInterval(int msecs);
+
+    bool waitForConnected(int msecs = 10000);
+    bool waitForDisconnected(int msecs = 10000);
+    bool waitForReadyRead(int msecs = 10000);
+    bool waitForMessagesWritten(int msecs = 10000);
 
 signals:
     void connected();
     void disconnected();
-    void error(Error error);
-    void stateChanged(State state);
-    void incomingMessage();
+    void error(DcpClient::Error error);
+    void stateChanged(DcpClient::State state);
+    void messageReceived();
 
 private:
+    Q_PRIVATE_SLOT(d, void _k_connected())
+    Q_PRIVATE_SLOT(d, void _k_socketStateChanged(QAbstractSocket::SocketState))
+    Q_PRIVATE_SLOT(d, void _k_socketError(QAbstractSocket::SocketError))
+    Q_PRIVATE_SLOT(d, void _k_readMessagesFromSocket())
+    Q_PRIVATE_SLOT(d, void _k_autoReconnectTimeout())
     Q_DISABLE_COPY(DcpClient)
     friend class DcpClientPrivate;
     DcpClientPrivate * const d;

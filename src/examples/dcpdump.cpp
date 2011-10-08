@@ -24,27 +24,24 @@
  */
 
 #include "dcpdump.h"
-#include <dcp.h>
+#include "dcpmessage.h"
 #include <QtCore>
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);
 
 DcpDump::DcpDump(QObject *parent)
-    : QObject(parent),
-      m_dcp(new DcpConnection(this)),
-      m_reconnectTimer(new QTimer(this)),
-      m_reconnect(false)
+    : QObject(parent)
 {
-    m_reconnectTimer->setInterval(3000);
-    connect(m_dcp, SIGNAL(connected()), this, SLOT(connected()));
-    connect(m_dcp, SIGNAL(disconnected()), this, SLOT(disconnected()));
-    connect(m_dcp, SIGNAL(error(QAbstractSocket::SocketError)),
-            this, SLOT(error(QAbstractSocket::SocketError)));
-    connect(m_dcp, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
-            this, SLOT(stateChanged(QAbstractSocket::SocketState)));
-    connect(m_dcp, SIGNAL(readyRead()), this, SLOT(messageReady()));
-    connect(m_reconnectTimer, SIGNAL(timeout()),
-            this, SLOT(reconnectTimer_timeout()));
+    m_dcp.setAutoReconnect(true);
+    m_dcp.setReconnectInterval(5000);
+
+    connect(&m_dcp, SIGNAL(connected()), this, SLOT(connected()));
+    connect(&m_dcp, SIGNAL(disconnected()), this, SLOT(disconnected()));
+    connect(&m_dcp, SIGNAL(error(DcpClient::Error)),
+            this, SLOT(error(DcpClient::Error)));
+    connect(&m_dcp, SIGNAL(stateChanged(DcpClient::State)),
+            this, SLOT(stateChanged(DcpClient::State)));
+    connect(&m_dcp, SIGNAL(messageReceived()), this, SLOT(messageReceived()));
 }
 
 DcpDump::~DcpDump()
@@ -52,26 +49,15 @@ DcpDump::~DcpDump()
     disconnectFromServer();
 }
 
-void DcpDump::connectToServer(const QByteArray &deviceName,
-                              const QString &serverName, quint16 serverPort)
+void DcpDump::connectToServer(const QString &serverName, quint16 serverPort,
+                              const QByteArray &deviceName)
 {
-    m_reconnect = true;
-    m_deviceName = deviceName;
-    m_serverName = serverName;
-    m_serverPort = serverPort;
-    m_dcp->connectToServer(serverName, serverPort);
+    m_dcp.connectToServer(serverName, serverPort, deviceName);
 }
 
 void DcpDump::disconnectFromServer()
 {
-    m_reconnect = false;
-    m_reconnectTimer->stop();
-    m_dcp->disconnectFromServer();
-}
-
-void DcpDump::setReconnectInterval(int msec)
-{
-    m_reconnectTimer->setInterval(msec);
+    m_dcp.disconnectFromServer();
 }
 
 void DcpDump::setDeviceMap(const QMap<QByteArray, QByteArray> &deviceMap)
@@ -81,8 +67,7 @@ void DcpDump::setDeviceMap(const QMap<QByteArray, QByteArray> &deviceMap)
 
 void DcpDump::connected()
 {
-    cout << "Connected [" << m_deviceName << "]." << endl;
-    m_dcp->registerName(m_deviceName);
+    cout << "Connected [" << m_dcp.deviceName() << "]." << endl;
 }
 
 void DcpDump::disconnected()
@@ -90,36 +75,26 @@ void DcpDump::disconnected()
     cout << "Disconnected." << endl;
 }
 
-void DcpDump::error(QAbstractSocket::SocketError socketError)
+void DcpDump::error(DcpClient::Error error)
 {
-    cout << m_dcp->errorString() << "." << endl;
+    cout << "Error: " << m_dcp.errorString() << "." << endl;
 }
 
-void DcpDump::stateChanged(QAbstractSocket::SocketState socketState)
+void DcpDump::stateChanged(DcpClient::State state)
 {
-    //qDebug() << socketState;
-    switch (m_dcp->state())
-    {
-    case QAbstractSocket::UnconnectedState:
-        if (m_reconnect)
-            m_reconnectTimer->start();
-        break;
-    case QAbstractSocket::ConnectingState:
-        cout << "Connecting [" << m_serverName << ":" << m_serverPort
-                << "]..." << endl;
-    default:
-        m_reconnectTimer->stop();
-    }
+    if (state == DcpClient::ConnectingState)
+        cout << "Connecting [" << m_dcp.serverName() << ":"
+             << m_dcp.serverPort() << "]..." << endl;
 }
 
-void DcpDump::messageReady()
+void DcpDump::messageReceived()
 {
-    DcpMessage msg = m_dcp->readMessage();
+    DcpMessage msg = m_dcp.readMessage();
     QByteArray source = msg.source();
     if (m_deviceMap.contains(source)) {
         msg.setSource(msg.destination());
         msg.setDestination(m_deviceMap[source]);
-        m_dcp->writeMessage(msg);
+        m_dcp.sendMessage(msg);
     }
 
     cout << ((msg.flags() & DcpMessage::PaceFlag) != 0 ? "p" : "-")
@@ -133,12 +108,6 @@ void DcpDump::messageReady()
          << msg.destination() << " "
          << "[" << msg.data().size() << "] "
          << msg.data() << endl;
-}
-
-void DcpDump::reconnectTimer_timeout()
-{
-    if (m_dcp->state() == QAbstractSocket::UnconnectedState)
-        m_dcp->connectToServer(m_serverName, m_serverPort);
 }
 
 #include "dcpdump.moc"

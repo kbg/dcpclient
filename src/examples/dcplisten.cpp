@@ -23,7 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <dcp.h>
+#include <dcpclient.h>
+#include <dcpmessage.h>
 #include <QtCore>
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);
@@ -43,31 +44,23 @@ static QTextStream & operator << (QTextStream &os, const DcpMessage &msg) {
 
 int main(int argc, char **argv)
 {
-    // This app object is only created because of a warning in
-    // Qt 4.7, see https://bugreports.qt.nokia.com/browse/QTBUG-14575
+    // This app object is only created because of a warning in Qt 4.7,
+    // see https://bugreports.qt.nokia.com/browse/QTBUG-14575
     QCoreApplication app(argc, argv);
 
-    DcpConnection dcp;
-    QString hostName = "localhost";
-    quint16 port = 2001;
+    DcpClient dcp;
+    QString serverName = "localhost";
+    quint16 serverPort = 2001;
     QByteArray deviceName = "dcplisten";
 
-    cout << "Connecting [" << hostName << ":" << port << "]..." << flush;
-    dcp.connectToServer(hostName, port);
+    cout << "Connecting [" << serverName << ":" << serverPort << "]..."
+         << flush;
+    dcp.connectToServer(serverName, serverPort, deviceName);
     if (!dcp.waitForConnected()) {
         cout << endl << "Error: " << dcp.errorString() << endl;
         return 1;
     }
     cout << " Connected." << endl;
-
-    // Tell the server who we are.
-    cout << "Registering device name [" << deviceName << "]..." << flush;
-    dcp.registerName(deviceName);
-    if (!dcp.waitForMessagesWritten()) {
-        cout << endl << "Error: " << dcp.errorString() << endl;
-        return 1;
-    }
-    cout << " Done." << endl;
 
     // Wait for incomming messags and print them until a message is
     // received that contains the word `quit'.
@@ -90,9 +83,7 @@ int main(int argc, char **argv)
 
     cout << "Disconnecting from server..." << flush;
     dcp.disconnectFromServer();
-    if (dcp.state() != QAbstractSocket::UnconnectedState
-            && !dcp.waitForDisconnected())
-    {
+    if (!dcp.waitForDisconnected()) {
         cout << endl << "Error: " << dcp.errorString() << endl;
         return 1;
     }
