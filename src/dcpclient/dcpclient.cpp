@@ -38,6 +38,7 @@ class DcpClientPrivate
 {
 public:
     explicit DcpClientPrivate(DcpClient *qq);
+    virtual ~DcpClientPrivate();
 
     void readMessageFromSocket();
     void writeMessageToSocket(const DcpMessage &msg);
@@ -55,28 +56,36 @@ public:
 
     // private data
     DcpClient * const q;
-    QTcpSocket socket;
+    QTcpSocket *socket;
     QQueue<DcpMessage> inQueue;
     QString serverName;
     quint16 serverPort;
     QByteArray deviceName;
-    QTimer reconnectTimer;
+    QTimer *reconnectTimer;
     bool autoReconnect;
     bool connectionRequested;
 };
 
 DcpClientPrivate::DcpClientPrivate(DcpClient *qq)
     : q(qq),
+      socket(new QTcpSocket),
       serverPort(0),
+      reconnectTimer(new QTimer),
       autoReconnect(false),
       connectionRequested(false)
 {
-    reconnectTimer.setInterval(30000);
+    reconnectTimer->setInterval(30000);
+}
+
+DcpClientPrivate::~DcpClientPrivate()
+{
+    delete socket;
+    delete reconnectTimer;
 }
 
 void DcpClientPrivate::readMessageFromSocket()
 {
-    if (socket.bytesAvailable() < DcpFullHeaderSize)
+    if (socket->bytesAvailable() < DcpFullHeaderSize)
         return;
 
     char pkgHeader[DcpPacketHeaderSize];
@@ -85,19 +94,19 @@ void DcpClientPrivate::readMessageFromSocket()
     const quint32 *pOffset = reinterpret_cast<const quint32 *>(
                 pkgHeader + DcpPacketOffsetPos);
 
-    socket.peek(pkgHeader, DcpPacketHeaderSize);
+    socket->peek(pkgHeader, DcpPacketHeaderSize);
     quint32 msgSize = qFromBigEndian(*pMsgSize);
     quint32 offset = qFromBigEndian(*pOffset);
 
     // not enough data (header + message)
-    if (socket.bytesAvailable() < DcpFullHeaderSize + msgSize)
+    if (socket->bytesAvailable() < DcpFullHeaderSize + msgSize)
         return;
 
     // remove packet header from the input buffer
-    socket.read(pkgHeader, DcpPacketHeaderSize);
+    socket->read(pkgHeader, DcpPacketHeaderSize);
 
     // read message data
-    QByteArray rawMsg = socket.read(DcpMessageHeaderSize + msgSize);
+    QByteArray rawMsg = socket->read(DcpMessageHeaderSize + msgSize);
 
     // ignore multi-packet messages
     if (offset != 0 || rawMsg.size() != DcpMessageHeaderSize + msgSize) {
@@ -132,15 +141,15 @@ void DcpClientPrivate::writeMessageToSocket(const DcpMessage &msg)
     *pMsgSize = qToBigEndian(static_cast<quint32>(msg.data().size()));
     *pOffset = 0;
 
-    socket.write(pkgHeader, DcpPacketHeaderSize);
-    socket.write(msg.toRawMsg());
+    socket->write(pkgHeader, DcpPacketHeaderSize);
+    socket->write(msg.toRawMsg());
 }
 
 void DcpClientPrivate::registerName(const QByteArray &deviceName)
 {
     DcpMessage msg(0, 0, deviceName, QByteArray(), "HELO");
     writeMessageToSocket(msg);
-    socket.flush();
+    socket->flush();
 }
 
 DcpClient::State DcpClientPrivate::mapSocketState(
@@ -214,9 +223,9 @@ void DcpClientPrivate::_k_socketStateChanged(QAbstractSocket::SocketState state)
 {
     if (autoReconnect && connectionRequested
                       && state == QAbstractSocket::UnconnectedState)
-        reconnectTimer.start();
+        reconnectTimer->start();
     else
-        reconnectTimer.stop();
+        reconnectTimer->stop();
 
     emit q->stateChanged(mapSocketState(state));
 }
@@ -229,14 +238,14 @@ void DcpClientPrivate::_k_socketError(QAbstractSocket::SocketError error)
 void DcpClientPrivate::_k_readMessagesFromSocket()
 {
     // stop if not enough header data is available
-    while (socket.bytesAvailable() >= DcpFullHeaderSize)
+    while (socket->bytesAvailable() >= DcpFullHeaderSize)
         readMessageFromSocket();  // emits messageReceived()
 }
 
 void DcpClientPrivate::_k_autoReconnectTimeout()
 {
-    if (socket.state() == QAbstractSocket::UnconnectedState)
-        socket.connectToHost(serverName, serverPort);
+    if (socket->state() == QAbstractSocket::UnconnectedState)
+        socket->connectToHost(serverName, serverPort);
 }
 
 // ---------------------------------------------------------------------------
@@ -245,14 +254,14 @@ DcpClient::DcpClient(QObject *parent)
     : QObject(parent),
       d(new DcpClientPrivate(this))
 {
-    connect(&d->socket, SIGNAL(connected()), SLOT(_k_connected()));
-    connect(&d->socket, SIGNAL(disconnected()), SIGNAL(disconnected()));
-    connect(&d->socket, SIGNAL(error(QAbstractSocket::SocketError)),
+    connect(d->socket, SIGNAL(connected()), SLOT(_k_connected()));
+    connect(d->socket, SIGNAL(disconnected()), SIGNAL(disconnected()));
+    connect(d->socket, SIGNAL(error(QAbstractSocket::SocketError)),
             SLOT(_k_socketError(QAbstractSocket::SocketError)));
-    connect(&d->socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
+    connect(d->socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
             SLOT(_k_socketStateChanged(QAbstractSocket::SocketState)));
-    connect(&d->socket, SIGNAL(readyRead()), SLOT(_k_readMessagesFromSocket()));
-    connect(&d->reconnectTimer, SIGNAL(timeout()), SLOT(_k_autoReconnectTimeout()));
+    connect(d->socket, SIGNAL(readyRead()), SLOT(_k_readMessagesFromSocket()));
+    connect(d->reconnectTimer, SIGNAL(timeout()), SLOT(_k_autoReconnectTimeout()));
 }
 
 DcpClient::~DcpClient()
@@ -267,13 +276,13 @@ void DcpClient::connectToServer(const QString &serverName, quint16 serverPort,
     d->serverName = serverName;
     d->serverPort = serverPort;
     d->deviceName = deviceName;
-    d->socket.connectToHost(serverName, serverPort);
+    d->socket->connectToHost(serverName, serverPort);
 }
 
 void DcpClient::disconnectFromServer()
 {
     d->connectionRequested = false;
-    d->socket.disconnectFromHost();
+    d->socket->disconnectFromHost();
 }
 
 void DcpClient::sendMessage(const DcpMessage &message)
@@ -293,17 +302,27 @@ DcpMessage DcpClient::readMessage()
 
 DcpClient::State DcpClient::state() const
 {
-    return DcpClientPrivate::mapSocketState(d->socket.state());
+    return DcpClientPrivate::mapSocketState(d->socket->state());
+}
+
+bool DcpClient::isConnected() const
+{
+    return d->socket->state() == QAbstractSocket::ConnectedState;
+}
+
+bool DcpClient::isUnconnected() const
+{
+    return d->socket->state() == QAbstractSocket::UnconnectedState;
 }
 
 DcpClient::Error DcpClient::error() const
 {
-    return DcpClientPrivate::mapSocketError(d->socket.error());
+    return DcpClientPrivate::mapSocketError(d->socket->error());
 }
 
 QString DcpClient::errorString() const
 {
-    return d->socket.errorString();
+    return d->socket->errorString();
 }
 
 QString DcpClient::serverName() const
@@ -330,32 +349,32 @@ void DcpClient::setAutoReconnect(bool enable)
 {
     d->autoReconnect = enable;
     if (enable && d->connectionRequested
-               && d->socket.state() == QAbstractSocket::UnconnectedState)
-        d->reconnectTimer.start();
+               && d->socket->state() == QAbstractSocket::UnconnectedState)
+        d->reconnectTimer->start();
 }
 
 int DcpClient::reconnectInterval() const
 {
-    return d->reconnectTimer.interval();
+    return d->reconnectTimer->interval();
 }
 
 void DcpClient::setReconnectInterval(int msecs)
 {
-    d->reconnectTimer.setInterval(msecs);
+    d->reconnectTimer->setInterval(msecs);
 }
 
 bool DcpClient::waitForConnected(int msecs)
 {
     // register device name if the connection was established
-    bool ok = d->socket.waitForConnected(msecs);
+    bool ok = d->socket->waitForConnected(msecs);
     if (ok) d->registerName(d->deviceName);
     return ok;
 }
 
 bool DcpClient::waitForDisconnected(int msecs)
 {
-    if (d->socket.state() != QAbstractSocket::UnconnectedState)
-        return d->socket.waitForDisconnected(msecs);
+    if (d->socket->state() != QAbstractSocket::UnconnectedState)
+        return d->socket->waitForDisconnected(msecs);
     return true;
 }
 
@@ -367,7 +386,7 @@ bool DcpClient::waitForReadyRead(int msecs)
     while (messagesAvailable() == 0)
     {
         int msecsLeft = timeoutValue(msecs, stopWatch.elapsed());
-        if (!d->socket.waitForReadyRead(msecsLeft))
+        if (!d->socket->waitForReadyRead(msecsLeft))
             return false;
 
         // try to read messages
@@ -385,17 +404,17 @@ bool DcpClient::waitForMessagesWritten(int msecs)
     QElapsedTimer stopWatch;
     stopWatch.start();
 
-    while(d->socket.bytesToWrite() != 0)
+    while(d->socket->bytesToWrite() != 0)
     {
         int msecsLeft = timeoutValue(msecs, stopWatch.elapsed());
         if (msecsLeft == 0)
             break;
 
-        if (!d->socket.waitForBytesWritten(msecsLeft))
+        if (!d->socket->waitForBytesWritten(msecsLeft))
             return false;
     }
 
-    return d->socket.bytesToWrite() == 0;
+    return d->socket->bytesToWrite() == 0;
 }
 
 #include "dcpclient.moc"

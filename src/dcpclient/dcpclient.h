@@ -69,11 +69,21 @@ public:
                          const QByteArray &deviceName);
     void disconnectFromServer();
 
+    /*
+    void sendMessage(const QByteArray &destination, const QByteArray &data,
+                     quint16 flags = 0);
+    void sendMessage(quint32 snr, const QByteArray &destination,
+                     const QByteArray &data, quint16 flags = 0);
+    */
     void sendMessage(const DcpMessage &message);
+
     int messagesAvailable() const;
     DcpMessage readMessage();
 
     DcpClient::State state() const;
+    bool isConnected() const;
+    bool isUnconnected() const;
+
     DcpClient::Error error() const;
     QString errorString() const;
 
