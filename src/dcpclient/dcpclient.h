@@ -69,12 +69,16 @@ public:
                          const QByteArray &deviceName);
     void disconnectFromServer();
 
-    /*
-    void sendMessage(const QByteArray &destination, const QByteArray &data,
-                     quint16 flags = 0);
+    quint32 nextSnr() const;
+    void setNextSnr(quint32 snr);
+    quint32 sendMessage(const QByteArray &destination, const QByteArray &data,
+                        quint16 flags = 0);
+    quint32 sendMessage(const QByteArray &destination, const QByteArray &data,
+                        quint8 userFlags, quint8 dcpFlags);
     void sendMessage(quint32 snr, const QByteArray &destination,
                      const QByteArray &data, quint16 flags = 0);
-    */
+    void sendMessage(quint32 snr, const QByteArray &destination,
+                     const QByteArray &data, quint8 userFlags, quint8 dcpFlags);
     void sendMessage(const DcpMessage &message);
 
     int messagesAvailable() const;

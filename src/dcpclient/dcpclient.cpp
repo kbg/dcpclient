@@ -64,6 +64,7 @@ public:
     QTimer *reconnectTimer;
     bool autoReconnect;
     bool connectionRequested;
+    quint32 snr;
 };
 
 DcpClientPrivate::DcpClientPrivate(DcpClient *qq)
@@ -72,7 +73,8 @@ DcpClientPrivate::DcpClientPrivate(DcpClient *qq)
       serverPort(0),
       reconnectTimer(new QTimer),
       autoReconnect(false),
-      connectionRequested(false)
+      connectionRequested(false),
+      snr(0)
 {
     reconnectTimer->setInterval(30000);
 }
@@ -285,6 +287,53 @@ void DcpClient::disconnectFromServer()
     d->socket->disconnectFromHost();
 }
 
+quint32 DcpClient::nextSnr() const
+{
+    return d->snr;
+}
+
+void DcpClient::setNextSnr(quint32 snr)
+{
+    d->snr = snr;
+}
+
+quint32 DcpClient::sendMessage(const QByteArray &destination,
+                               const QByteArray &data, quint16 flags)
+{
+    DcpMessage msg(flags, d->snr++, d->deviceName, destination, data);
+    d->writeMessageToSocket(msg);
+    return msg.snr();
+}
+
+quint32 DcpClient::sendMessage(const QByteArray &destination,
+                               const QByteArray &data, quint8 userFlags,
+                               quint8 dcpFlags)
+{
+    DcpMessage msg(0, d->snr++, d->deviceName, destination, data);
+    msg.setDcpFlags(dcpFlags);
+    msg.setUserFlags(userFlags);
+    d->writeMessageToSocket(msg);
+    return msg.snr();
+}
+
+void DcpClient::sendMessage(quint32 snr, const QByteArray &destination,
+                            const QByteArray &data, quint16 flags)
+{
+    DcpMessage msg(flags, snr, d->deviceName, destination, data);
+    d->writeMessageToSocket(msg);
+}
+
+void DcpClient::sendMessage(quint32 snr, const QByteArray &destination,
+                            const QByteArray &data, quint8 userFlags,
+                            quint8 dcpFlags)
+{
+    DcpMessage msg(0, snr, d->deviceName, destination, data);
+    msg.setDcpFlags(dcpFlags);
+    msg.setUserFlags(userFlags);
+    d->writeMessageToSocket(msg);
+}
+
+
 void DcpClient::sendMessage(const DcpMessage &message)
 {
     d->writeMessageToSocket(message);
@@ -351,6 +400,8 @@ void DcpClient::setAutoReconnect(bool enable)
     if (enable && d->connectionRequested
                && d->socket->state() == QAbstractSocket::UnconnectedState)
         d->reconnectTimer->start();
+    else if (!enable)
+        d->reconnectTimer->stop();
 }
 
 int DcpClient::reconnectInterval() const

@@ -35,7 +35,8 @@ public:
         PaceFlag   = 0x1,
         GrecoFlag  = 0x2,
         UrgentFlag = 0x4,
-        ReplyFlag  = 0x8
+        ReplyFlag  = 0x8,
+        AckFlags   = UrgentFlag | ReplyFlag
     };
 
     DcpMessage();
