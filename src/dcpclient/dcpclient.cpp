@@ -297,6 +297,11 @@ void DcpClient::setNextSnr(quint32 snr)
     d->snr = snr;
 }
 
+quint32 DcpClient::incrementSnr()
+{
+    return d->snr++;
+}
+
 quint32 DcpClient::sendMessage(const QByteArray &destination,
                                const QByteArray &data, quint16 flags)
 {

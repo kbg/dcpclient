@@ -32,9 +32,6 @@ class QByteArray;
 class QString;
 class DcpMessage;
 
-class DcpMessageParser {
-};
-
 class DcpClientPrivate;
 class DcpClient : public QObject
 {
@@ -71,6 +68,8 @@ public:
 
     quint32 nextSnr() const;
     void setNextSnr(quint32 snr);
+    quint32 incrementSnr();
+
     quint32 sendMessage(const QByteArray &destination, const QByteArray &data,
                         quint16 flags = 0);
     quint32 sendMessage(const QByteArray &destination, const QByteArray &data,

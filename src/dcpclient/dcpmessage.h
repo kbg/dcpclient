@@ -76,11 +76,13 @@ public:
     static DcpMessage fromRawMsg(const QByteArray &rawMsg);
 
 private:
+    //! \todo Move to private d_ptr class.
     void init(const QByteArray &rawMsg);
     void init(quint16 flags, quint32 snr, const QByteArray &source,
               const QByteArray &destination, const QByteArray &data);
 
 private:
+    //! \todo Use implicit sharing, see QSharedDataPointer.
     bool m_null;
     quint16 m_flags;
     quint32 m_snr;
