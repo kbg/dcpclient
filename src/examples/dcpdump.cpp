@@ -24,7 +24,7 @@
  */
 
 #include "dcpdump.h"
-#include "dcpmessage.h"
+#include <dcpmessage.h>
 #include <QtCore>
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);

@@ -107,6 +107,11 @@ void DcpTermWin::loadSettings()
     m_serverName = settings.value("ServerName", "localhost").toString();
     uint serverPort = settings.value("ServerPort", 2001).toUInt(&ok);
     m_serverPort = (ok && serverPort <= 0xffff) ? quint16(serverPort) : 2001;
+    m_dcp->setAutoReconnect(settings.value("AutoReconnect", true).toBool());
+    ui->actionAutoReconnect->setChecked(m_dcp->autoReconnect());
+    int reconnectInverval = settings.value("ReconnectInterval").toInt(&ok);
+    if (ok && reconnectInverval > 0)
+        m_dcp->setReconnectInterval(reconnectInverval);
     settings.endGroup();
 
     // UI settings (position, size, ...)
@@ -184,7 +189,9 @@ void DcpTermWin::saveSettings()
     settings.beginGroup("Server");
     settings.setValue("ServerName", m_serverName);
     settings.setValue("ServerPort", m_serverPort);
-    settings.setValue("DeviceName", m_deviceName);
+    settings.setValue("DeviceName", QString(m_deviceName));
+    settings.setValue("AutoReconnect", ui->actionAutoReconnect->isChecked());
+    settings.setValue("ReconnectInterval", m_dcp->reconnectInterval());
     settings.endGroup();
 
     // UI settings (position, size, ...)
@@ -237,8 +244,8 @@ void DcpTermWin::printLine(const QString &text)
 void DcpTermWin::printLine(const QString &text, const QString &color)
 {
     QString html = text;
-    html.replace(" ", "&nbsp;").replace("\n", "<br>")
-        .replace(">", "&gt;").replace("<", "&lt;");
+    html.replace(" ", "&nbsp;").replace(">", "&gt;").replace("<", "&lt;")
+        .replace("\n", "<br>");
     html = QString("<font color=\"%1\">%2</font>").arg(color).arg(html);
     ui->textOutput->appendHtml(html);
 }
@@ -313,6 +320,11 @@ void DcpTermWin::dcp_stateChanged(DcpClient::State state)
         stateText = tr("Connected");
         titleText = tr(" - %1:%2").arg(m_dcp->serverName())
                                   .arg(m_dcp->serverPort());
+        if (verboseOutput())
+            printLine(tr("Connected to %1:%2 as %3.").arg(m_dcp->serverName())
+                         .arg(m_dcp->serverPort())
+                         .arg(QString(m_dcp->deviceName())),
+                      "blue");
         break;
     case DcpClient::ClosingState:
         stateText = tr("Disconnecting");
@@ -343,15 +355,15 @@ void DcpTermWin::dcp_messageReceived()
 
         // handle replies
         if (data.isEmpty())
-            printLine(tr("Invalid reply message."), "red");
+            printLine(tr("Invalid reply message"), "red");
         else if (data == "0 ACK")
             ; // do nothing
         else if (data == "2 ACK")
-            printLine(tr("Unknown command."), "red");
+            printLine(tr("Unknown command"), "red");
         else if (data == "3 ACK")
-            printLine(tr("Parameter error."), "red");
+            printLine(tr("Parameter error"), "red");
         else if (data == "5 ACK")
-            printLine(tr("Wrong mode."), "red");
+            printLine(tr("Wrong mode"), "red");
         else
         {
             QStringList args = QString(data).split(" ");
@@ -360,17 +372,21 @@ void DcpTermWin::dcp_messageReceived()
             int errcode = args.takeFirst().toInt(&ok);
 
             if (!ok)
-                printLine(tr("Invalid error code in reply message."));
+                printLine(tr("Invalid error code in reply message"));
             else if (errcode > 0)
-                printLine(tr("Command failed, errcode: %1.").arg(errcode),
+                printLine(tr("Command failed, errcode: %1").arg(errcode),
                           "red");
             else if (errcode < 0) {
-                printLine(tr("Command returned with warning, errorcode %1.")
+                printLine(tr("Command returned with warning, errorcode %1")
                           .arg(errcode), "red");
                 printLine(args.join(" "));
             }
-            else
-                printLine(args.join(" "));
+            else {
+                if (args.count() == 1 && args[0] == "FIN")
+                    printLine("OK");
+                else
+                    printLine(args.join(" "));
+            }
         }
     }
     else
