@@ -1,0 +1,32 @@
+
+=== Momentane Struktur ===
+
+   greco-message = command-message | reply-message ;
+ command-message = set-message | get-message | def-message | undef-message ;
+     set-message = "set" , space , identifier , space , ( name | value-list ) ;
+     get-message = "get" , space , identifier , [ space , name ]
+     def-message = "def" , space , identifier , name , [ space , value-list ] ;
+   undef-message = "undef" , identifier , name
+      identifier = non-space-string ;
+            name = non-space-string ;
+   reply-message = ack-message | eoe-message ;
+     ack-message = ack-error-code , space , "ACK" ;
+     eoe-message = eoe-error-code , space , ( "FIN" | value-list | binary-data ) ;
+  ack-error-code = "0" | "2" | "3" | "5" ;
+  eoe-error-code = integer ;
+      value-list = value , { space , value } ;
+           value = non-space-string ;
+         integer = [ "-" ] , digit , { digit } ;
+           digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+           space = " " ;
+            char = ? all characters ? ;
+     binary-data = char , { char } ;
+  non-space-char = char - space ;
+non-space-string = non-space-char , { non-space-char } ;
+
+
+=== Änderungen ===
+
+get-message = "get" , space , identifier , [ space , ( name | value-list ) ] ;
+
+"get" | "set" | "def" | "undef" | "load" | "store"
