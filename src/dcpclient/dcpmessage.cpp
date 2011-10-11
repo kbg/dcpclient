@@ -24,9 +24,11 @@
  */
 
 #include "dcpmessage.h"
-#include "dcp_p.h"
+#include "dcpclient_p.h"
 #include <QtCore/QtEndian>
 #include <QtCore/QtAlgorithms>
+
+namespace Dcp {
 
 /*!
     Default constructor.
@@ -247,3 +249,5 @@ DcpMessage DcpMessage::fromRawMsg(const QByteArray &rawMsg)
 {
     return DcpMessage(rawMsg);
 }
+
+} // namespace Dcp

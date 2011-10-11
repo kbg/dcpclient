@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef DCP_PRIVATE_H
-#define DCP_PRIVATE_H
+#ifndef DCPCLIENT_PRIVATE_H
+#define DCPCLIENT_PRIVATE_H
 
 /*
     WARNING
@@ -33,6 +33,10 @@
     Don't use this file as its content may change in future.
  */
 
+class QByteArray;
+
+namespace Dcp {
+
 enum {
     DcpMessageHeaderSize = 42,
     DcpMessageDeviceNameSize = 16,
@@ -40,22 +44,17 @@ enum {
     DcpMessageSnrPos = 2,
     DcpMessageSourcePos = 6,
     DcpMessageDestinationPos = 22,
-    DcpMessageDataLenPos = 38
-};
-
-enum {
+    DcpMessageDataLenPos = 38,
     DcpPacketHeaderSize = 8,
     DcpPacketMsgSizePos = 0,
-    DcpPacketOffsetPos = 4
-};
-
-enum {
+    DcpPacketOffsetPos = 4,
     DcpFullHeaderSize = DcpMessageHeaderSize + DcpPacketHeaderSize,
     DcpMaxPacketSize = 0x10000
 };
 
-class QByteArray;
 void stripRight(QByteArray &ba, char c = '\0');
 int timeoutValue(int msecs, int elapsed);
 
-#endif // DCP_PRIVATE_H
+} // namespace Dcp
+
+#endif // DCPCLIENT_PRIVATE_H

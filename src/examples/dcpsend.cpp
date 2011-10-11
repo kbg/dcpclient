@@ -26,6 +26,7 @@
 #include <dcpclient.h>
 #include <dcpmessage.h>
 #include <QtCore/QtCore>
+using namespace Dcp;
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);
 static QTextStream cerr(stderr, QIODevice::WriteOnly);

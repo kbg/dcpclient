@@ -12,7 +12,7 @@ set(libDcpClient_SRCS
     dcpclient.cpp
     dcpmessage.cpp
     dcpmessageparser.cpp
-    dcp_p.cpp
+    dcpclient_p.cpp
 )
 qt4_automoc(${libDcpClient_SRCS})
 

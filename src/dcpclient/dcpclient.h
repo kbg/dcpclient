@@ -30,6 +30,9 @@
 
 class QByteArray;
 class QString;
+
+namespace Dcp {
+
 class DcpMessage;
 
 class DcpClientPrivate;
@@ -107,8 +110,8 @@ public:
 signals:
     void connected();
     void disconnected();
-    void error(DcpClient::Error error);
-    void stateChanged(DcpClient::State state);
+    void error(Dcp::DcpClient::Error error);
+    void stateChanged(Dcp::DcpClient::State state);
     void messageReceived();
 
 private:
@@ -121,5 +124,7 @@ private:
     friend class DcpClientPrivate;
     DcpClientPrivate * const d;
 };
+
+} // namespace Dcp
 
 #endif // DCPCLIENT_H

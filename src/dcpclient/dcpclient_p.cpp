@@ -23,8 +23,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "dcp_p.h"
+#include "dcpclient_p.h"
 #include <QtCore/QByteArray>
+
+namespace Dcp {
 
 /*
     Removes all trailing characters with value c from the given byte array.
@@ -50,3 +52,5 @@ int timeoutValue(int msecs, int elapsed)
     int msecsLeft = msecs - elapsed;
     return msecsLeft < 0 ? 0 : msecsLeft;
 }
+
+} // namespace Dcp

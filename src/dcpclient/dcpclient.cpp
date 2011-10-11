@@ -24,8 +24,8 @@
  */
 
 #include "dcpclient.h"
+#include "dcpclient_p.h"
 #include "dcpmessage.h"
-#include "dcp_p.h"
 #include <QtCore/QString>
 #include <QtCore/QByteArray>
 #include <QtCore/QQueue>
@@ -33,6 +33,8 @@
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QTimer>
 #include <QtNetwork/QTcpSocket>
+
+namespace Dcp {
 
 class DcpClientPrivate
 {
@@ -472,5 +474,7 @@ bool DcpClient::waitForMessagesWritten(int msecs)
 
     return d->socket->bytesToWrite() == 0;
 }
+
+} // namespace Dcp
 
 #include "dcpclient.moc"

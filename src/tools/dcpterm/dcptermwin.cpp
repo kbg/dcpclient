@@ -28,6 +28,7 @@
 #include <dcpmessage.h>
 #include <QtDebug>
 #include <QtGui>
+using namespace Dcp;
 
 static QDebug operator << (QDebug debug, const DcpMessage &msg) {
     debug.nospace()
@@ -77,10 +78,10 @@ DcpTermWin::DcpTermWin(QWidget *parent)
     m_dcp->setAutoReconnect(true);
     m_dcp->setReconnectInterval(5000);
     dcp_stateChanged(m_dcp->state());
-    connect(m_dcp, SIGNAL(stateChanged(DcpClient::State)),
-            SLOT(dcp_stateChanged(DcpClient::State)));
-    connect(m_dcp, SIGNAL(error(DcpClient::Error)),
-            SLOT(dcp_error(DcpClient::Error)));
+    connect(m_dcp, SIGNAL(stateChanged(Dcp::DcpClient::State)),
+            SLOT(dcp_stateChanged(Dcp::DcpClient::State)));
+    connect(m_dcp, SIGNAL(error(Dcp::DcpClient::Error)),
+            SLOT(dcp_error(Dcp::DcpClient::Error)));
     connect(m_dcp, SIGNAL(messageReceived()), SLOT(dcp_messageReceived()));
 
     // load settings and try to connect

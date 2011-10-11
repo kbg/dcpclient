@@ -53,8 +53,8 @@ protected slots:
 
 private slots:
     void messageInputFinished();
-    void dcp_stateChanged(DcpClient::State state);
-    void dcp_error(DcpClient::Error error);
+    void dcp_stateChanged(Dcp::DcpClient::State state);
+    void dcp_error(Dcp::DcpClient::Error error);
     void dcp_messageReceived();
 
     // autoconnect slots
@@ -67,7 +67,7 @@ private slots:
 
 private:
     Ui::DcpTermWin *ui;
-    DcpClient *m_dcp;
+    Dcp::DcpClient *m_dcp;
     QByteArray m_deviceName;
     QString m_serverName;
     quint16 m_serverPort;

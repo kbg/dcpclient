@@ -28,6 +28,8 @@
 
 #include <QtCore/QByteArray>
 
+namespace Dcp {
+
 class DcpMessage
 {
 public:
@@ -90,5 +92,7 @@ private:
     QByteArray m_destination;
     QByteArray m_data;
 };
+
+} // namespace Dcp
 
 #endif // DCPMESSAGE_H

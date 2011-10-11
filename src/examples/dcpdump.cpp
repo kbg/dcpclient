@@ -26,6 +26,7 @@
 #include "dcpdump.h"
 #include <dcpmessage.h>
 #include <QtCore>
+using namespace Dcp;
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);
 
@@ -37,10 +38,10 @@ DcpDump::DcpDump(QObject *parent)
 
     connect(&m_dcp, SIGNAL(connected()), this, SLOT(connected()));
     connect(&m_dcp, SIGNAL(disconnected()), this, SLOT(disconnected()));
-    connect(&m_dcp, SIGNAL(error(DcpClient::Error)),
-            this, SLOT(error(DcpClient::Error)));
-    connect(&m_dcp, SIGNAL(stateChanged(DcpClient::State)),
-            this, SLOT(stateChanged(DcpClient::State)));
+    connect(&m_dcp, SIGNAL(error(Dcp::DcpClient::Error)),
+            this, SLOT(error(Dcp::DcpClient::Error)));
+    connect(&m_dcp, SIGNAL(stateChanged(Dcp::DcpClient::State)),
+            this, SLOT(stateChanged(Dcp::DcpClient::State)));
     connect(&m_dcp, SIGNAL(messageReceived()), this, SLOT(messageReceived()));
 }
 

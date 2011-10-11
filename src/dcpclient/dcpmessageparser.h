@@ -30,6 +30,9 @@
 
 class QByteArray;
 template <typename T> class QList;
+
+namespace Dcp {
+
 class DcpMessage;
 
 class DcpMessageParserPrivate;
@@ -74,5 +77,7 @@ public:
         UnknownCommand
     };
 };
+
+} // namespace Dcp
 
 #endif // DCPMESSAGEPARSER_H

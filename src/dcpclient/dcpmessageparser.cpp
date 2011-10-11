@@ -28,6 +28,8 @@
 #include <QtCore/QList>
 #include <QtCore/QByteArray>
 
+namespace Dcp {
+
 class DcpMessageParserPrivate
 {
 public:
@@ -78,3 +80,5 @@ QList<QByteArray> DcpMessageParser::arguments()
 {
     return QList<QByteArray>();
 }
+
+} // namespace Dcp

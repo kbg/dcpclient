@@ -27,6 +27,7 @@
 #include <dcpmessage.h>
 #include <dcpmessageparser.h>
 #include <QtCore>
+using namespace Dcp;
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);
 
@@ -34,10 +35,10 @@ DcpTime::DcpTime(QObject *parent)
     : QObject(parent)
 {
     m_dcp.setAutoReconnect(true);
-    connect(&m_dcp, SIGNAL(error(DcpClient::Error)),
-            this, SLOT(error(DcpClient::Error)));
-    connect(&m_dcp, SIGNAL(stateChanged(DcpClient::State)),
-            this, SLOT(stateChanged(DcpClient::State)));
+    connect(&m_dcp, SIGNAL(error(Dcp::DcpClient::Error)),
+            this, SLOT(error(Dcp::DcpClient::Error)));
+    connect(&m_dcp, SIGNAL(stateChanged(Dcp::DcpClient::State)),
+            this, SLOT(stateChanged(Dcp::DcpClient::State)));
     connect(&m_dcp, SIGNAL(messageReceived()), this, SLOT(messageReceived()));
 }
 
