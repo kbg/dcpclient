@@ -26,6 +26,7 @@
 #ifndef DCPMESSAGEPARSER_H
 #define DCPMESSAGEPARSER_H
 
+#include "dcpmessage.h"
 #include <QtCore/qglobal.h>
 
 class QByteArray;
@@ -33,40 +34,41 @@ template <typename T> class QList;
 
 namespace Dcp {
 
-class DcpMessage;
-
-class DcpMessageParserPrivate;
-class DcpMessageParser
+class MessageParserPrivate;
+class MessageParser
 {
 public:
-    DcpMessageParser();
-    virtual ~DcpMessageParser();
-    virtual bool parse(const DcpMessage &msg, bool strict = false);
-    virtual QList<QByteArray> arguments();
+    MessageParser();
+    virtual ~MessageParser();
+    virtual bool parse(const DcpMessage &msg);
+    virtual QList<QByteArray> arguments() const;
 
 protected:
-    DcpMessageParserPrivate * const d_ptr;
-    DcpMessageParser(DcpMessageParserPrivate &dd);
+    MessageParserPrivate * const d_ptr;
+    MessageParser(MessageParserPrivate &dd);
 
 private:
-    Q_DISABLE_COPY(DcpMessageParser)
-    Q_DECLARE_PRIVATE(DcpMessageParser)
+    Q_DISABLE_COPY(MessageParser)
+    Q_DECLARE_PRIVATE(MessageParser)
 };
 
-class ReplyParser : public DcpMessageParser
+//class ReplyParserPrivate;
+class ReplyParser : public MessageParser
 {
 public:
     enum ReplyType {
         AckReply,
         EoeReply
     };
+
+    ReplyParser();
+    ~ReplyParser();
+    bool parse(const DcpMessage &msg);
+    int errorCode() const;
 };
 
-class BinaryReplyParser : public ReplyParser
-{
-};
-
-class CommandParser : public DcpMessageParser
+class CommandParserPrivate;
+class CommandParser : public MessageParser
 {
 public:
     enum CommandType {
@@ -76,6 +78,18 @@ public:
         UndefCommand,
         UnknownCommand
     };
+
+    CommandParser();
+    bool parse(const DcpMessage &msg);
+    CommandType commandType() const;
+    QByteArray commandString() const;
+
+protected:
+    CommandParser(CommandParserPrivate &dd);
+
+private:
+    Q_DISABLE_COPY(CommandParser)
+    Q_DECLARE_PRIVATE(CommandParser)
 };
 
 } // namespace Dcp

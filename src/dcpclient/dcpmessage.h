@@ -30,6 +30,13 @@
 
 namespace Dcp {
 
+enum AckErrorCode {
+    AckNoError = 0,
+    AckUnknowCommandError = 2,
+    AckParameterError = 3,
+    AckWrongModeError = 5
+};
+
 class DcpMessage
 {
 public:
@@ -76,6 +83,9 @@ public:
 
     QByteArray toRawMsg() const;
     static DcpMessage fromRawMsg(const QByteArray &rawMsg);
+
+    DcpMessage ackMessage(int errorCode = AckNoError) const;
+    DcpMessage replyMessage(const QByteArray &data, int errorCode = 0) const;
 
 private:
     //! \todo Move to private d_ptr class.

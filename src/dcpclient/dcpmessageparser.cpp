@@ -30,55 +30,140 @@
 
 namespace Dcp {
 
-class DcpMessageParserPrivate
+class MessageParserPrivate
 {
 public:
-    DcpMessageParserPrivate();
-    virtual ~DcpMessageParserPrivate();
+    MessageParserPrivate();
+    virtual ~MessageParserPrivate();
 
-    DcpMessageParser *q_ptr;
+    MessageParser *q_ptr;
     QList<QByteArray> args;
-    Q_DECLARE_PUBLIC(DcpMessageParser)
+    Q_DECLARE_PUBLIC(MessageParser)
 };
 
-DcpMessageParserPrivate::DcpMessageParserPrivate()
+MessageParserPrivate::MessageParserPrivate()
     : q_ptr(0)
 {
 }
 
-DcpMessageParserPrivate::~DcpMessageParserPrivate()
+MessageParserPrivate::~MessageParserPrivate()
 {
 }
 
 
-DcpMessageParser::DcpMessageParser()
-    : d_ptr(new DcpMessageParserPrivate)
+MessageParser::MessageParser()
+    : d_ptr(new MessageParserPrivate)
 {
     d_ptr->q_ptr = this;
 }
 
-DcpMessageParser::DcpMessageParser(DcpMessageParserPrivate &dd)
+MessageParser::MessageParser(MessageParserPrivate &dd)
     : d_ptr(&dd)
 {
     d_ptr->q_ptr = this;
 }
 
-DcpMessageParser::~DcpMessageParser()
+MessageParser::~MessageParser()
 {
     delete d_ptr;
 }
 
-bool DcpMessageParser::parse(const DcpMessage &msg, bool strict)
+bool MessageParser::parse(const DcpMessage &msg)
 {
-    Q_D(DcpMessageParser);
-    QByteArray data = strict ? msg.data() : msg.data().simplified();
-    d->args = data.split(' ');
+    Q_D(MessageParser);
+    d->args = msg.data().split(' ');
+    d->args.removeAll("");
     return true;
 }
 
-QList<QByteArray> DcpMessageParser::arguments()
+QList<QByteArray> MessageParser::arguments() const
 {
-    return QList<QByteArray>();
+    Q_D(const MessageParser);
+    return d->args;
+}
+
+// --------------------------------------------------------------------------
+
+ReplyParser::ReplyParser()
+{
+
+}
+
+ReplyParser::~ReplyParser()
+{
+
+}
+
+bool ReplyParser::parse(const DcpMessage &msg)
+{
+
+}
+
+int ReplyParser::errorCode() const
+{
+
+}
+
+// --------------------------------------------------------------------------
+
+class CommandParserPrivate : public MessageParserPrivate
+{
+public:
+    CommandParserPrivate();
+    QByteArray cmdString;
+    CommandParser::CommandType cmdType;
+};
+
+CommandParserPrivate::CommandParserPrivate()
+    : cmdType(CommandParser::UnknownCommand)
+{
+}
+
+CommandParser::CommandParser()
+    : MessageParser(*(new CommandParserPrivate))
+{
+}
+
+CommandParser::CommandParser(CommandParserPrivate &dd)
+    : MessageParser(dd)
+{
+}
+
+bool CommandParser::parse(const DcpMessage &msg)
+{
+    Q_D(CommandParser);
+
+    if (!MessageParser::parse(msg)) {
+        d->cmdString = QByteArray();
+        d->cmdType = CommandParser::UnknownCommand;
+        return false;
+    }
+
+    d->cmdString = d->args.isEmpty() ? QByteArray() : d->args.takeFirst();
+    if (d->cmdString == "set")
+        d->cmdType = SetCommand;
+    else if (d->cmdString == "get")
+        d->cmdType = GetCommand;
+    else if (d->cmdString == "def")
+        d->cmdType = DefCommand;
+    else if (d->cmdString == "undef")
+        d->cmdType = UndefCommand;
+    else
+        d->cmdType = UnknownCommand;
+
+    return true;
+}
+
+CommandParser::CommandType CommandParser::commandType() const
+{
+    Q_D(const CommandParser);
+    return d->cmdType;
+}
+
+QByteArray CommandParser::commandString() const
+{
+    Q_D(const CommandParser);
+    return d->cmdString;
 }
 
 } // namespace Dcp

@@ -250,4 +250,20 @@ DcpMessage DcpMessage::fromRawMsg(const QByteArray &rawMsg)
     return DcpMessage(rawMsg);
 }
 
+DcpMessage DcpMessage::ackMessage(int errorCode) const
+{
+    return DcpMessage(
+        m_flags | ReplyFlag | UrgentFlag,
+        m_snr, m_destination, m_source,
+        QByteArray::number(errorCode) + " ACK");
+}
+
+DcpMessage DcpMessage::replyMessage(const QByteArray &data, int errorCode) const
+{
+    return DcpMessage(
+        m_flags | ReplyFlag,
+        m_snr, m_destination, m_source,
+        QByteArray::number(errorCode) + " " + (data.isEmpty() ? "FIN" : data));
+}
+
 } // namespace Dcp

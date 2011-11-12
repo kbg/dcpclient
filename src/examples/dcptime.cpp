@@ -80,6 +80,37 @@ void DcpTime::stateChanged(DcpClient::State state)
 void DcpTime::messageReceived()
 {
     DcpMessage msg = m_dcp.readMessage();
+
+    // ignore reply messages
+    if (msg.isReply())
+        return;
+
+    if (!m_parser.parse(msg)) {
+        cout << "Error parsing dcp message." << endl;
+        return;
+    }
+
+    QDateTime now = QDateTime::currentDateTimeUtc();
+    QList<QByteArray> args = m_parser.arguments();
+    switch (m_parser.commandType())
+    {
+    case CommandParser::GetCommand:
+        if (args.isEmpty())
+            m_dcp.sendMessage(msg.ackMessage(AckUnknowCommandError));
+        else if (args.size() != 1)
+            m_dcp.sendMessage(msg.ackMessage(AckParameterError));
+        else if (args[0] == "time") {
+            m_dcp.sendMessage(msg.ackMessage());
+            m_dcp.sendMessage(msg.replyMessage(
+                                  now.toString("HH:mm:ss.zzz").toAscii()));
+        }
+        else
+        break;
+    case CommandParser::SetCommand:
+        break;
+    default:
+        m_dcp.sendMessage(msg.ackMessage(AckUnknowCommandError));
+    }
 }
 
 #include "dcptime.moc"

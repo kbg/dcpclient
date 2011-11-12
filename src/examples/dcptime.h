@@ -27,6 +27,7 @@
 #define DCPTIME_H
 
 #include <dcpclient.h>
+#include <dcpmessageparser.h>
 #include <QtCore/QObject>
 #include <QtCore/QString>
 #include <QtCore/QByteArray>
@@ -50,6 +51,7 @@ protected slots:
 private:
     Q_DISABLE_COPY(DcpTime)
     Dcp::DcpClient m_dcp;
+    Dcp::CommandParser m_parser;
 };
 
 #endif // DCPTIME_H
