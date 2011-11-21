@@ -26,13 +26,13 @@
 #include "dcptime.h"
 #include <dcpmessage.h>
 #include <dcpmessageparser.h>
-#include <QtCore>
+#include <QtCore/QtCore>
 using namespace Dcp;
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);
 
 DcpTime::DcpTime(QObject *parent)
-    : QObject(parent)
+    : QObject(parent), m_timeMode("utc")
 {
     m_dcp.setAutoReconnect(true);
     connect(&m_dcp, SIGNAL(error(Dcp::DcpClient::Error)),
@@ -85,31 +85,86 @@ void DcpTime::messageReceived()
     if (msg.isReply())
         return;
 
+    // parse command messages
     if (!m_parser.parse(msg)) {
-        cout << "Error parsing dcp message." << endl;
+        m_dcp.sendMessage(msg.ackMessage(AckUnknownCommandError));
         return;
     }
 
-    QDateTime now = QDateTime::currentDateTimeUtc();
+    // get current date and time
+    QDateTime now = (m_timeMode == "local") ?
+        QDateTime::currentDateTime() : QDateTime::currentDateTimeUtc();
+
+    // handle command messages
     QList<QByteArray> args = m_parser.arguments();
+    QByteArray identifier = m_parser.identifier();
+    static const QList<QByteArray> getters = QList<QByteArray>()
+            << "mode" << "time" << "date" << "datetime" << "julian";
     switch (m_parser.commandType())
     {
     case CommandParser::GetCommand:
-        if (args.isEmpty())
-            m_dcp.sendMessage(msg.ackMessage(AckUnknowCommandError));
-        else if (args.size() != 1)
-            m_dcp.sendMessage(msg.ackMessage(AckParameterError));
-        else if (args[0] == "time") {
-            m_dcp.sendMessage(msg.ackMessage());
-            m_dcp.sendMessage(msg.replyMessage(
-                                  now.toString("HH:mm:ss.zzz").toAscii()));
+        // check for valid identifier
+        if (!getters.contains(identifier)) {
+            m_dcp.sendMessage(msg.ackMessage(AckUnknownCommandError));
+            return;
         }
-        else
+
+        // all supported get commands have no additional argument
+        if (!args.isEmpty()) {
+            m_dcp.sendMessage(msg.ackMessage(AckParameterError));
+            return;
+        }
+
+        // command is valid
+        m_dcp.sendMessage(msg.ackMessage());
+
+        if (identifier == "mode") {
+            m_dcp.sendMessage(msg.replyMessage(m_timeMode));
+        }
+        else if (identifier == "time") {
+            m_dcp.sendMessage(msg.replyMessage(
+                now.toString("HH:mm:ss.zzz").toAscii()));
+        }
+        else if (identifier == "date") {
+            m_dcp.sendMessage(msg.replyMessage(
+                now.toString("yyyy-MM-dd").toAscii()));
+        }
+        else if (identifier == "datetime") {
+            m_dcp.sendMessage(msg.replyMessage(
+                now.toString("yyyy-MM-ddTHH:mm:ss.zzz").toAscii()));
+        }
+        else if (identifier == "julian") {
+            now = now.toUTC();
+            double julian = now.date().toJulianDay() - 0.5;
+            julian += now.time().hour() / 24.0;
+            julian += now.time().minute() / (24.0 * 60.0);
+            julian += now.time().second() / (24.0 * 3600.0);
+            julian += now.time().msec() / (24.0 * 3600000.0);
+            m_dcp.sendMessage(msg.replyMessage(
+                QByteArray::number(julian, 'f', 8)));
+        }
         break;
+
     case CommandParser::SetCommand:
+        // only set mode command with one argument
+        if (identifier != "mode") {
+            m_dcp.sendMessage(msg.ackMessage(AckUnknownCommandError));
+        }
+        else if (args.size() != 1 || (args[0] != "local" && args[0] != "utc")) {
+            m_dcp.sendMessage(msg.ackMessage(AckParameterError));
+        }
+        else {
+            m_dcp.sendMessage(msg.ackMessage());
+            m_timeMode = args[0];
+            m_dcp.sendMessage(msg.replyMessage("FIN"));
+        }
         break;
-    default:
-        m_dcp.sendMessage(msg.ackMessage(AckUnknowCommandError));
+
+    case CommandParser::DefCommand:
+    case CommandParser::UndefCommand:
+        // there are no supported def or undef commands
+        m_dcp.sendMessage(msg.ackMessage(AckUnknownCommandError));
+        break;
     }
 }
 

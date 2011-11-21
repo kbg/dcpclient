@@ -24,7 +24,7 @@
  */
 
 #include "dcptime.h"
-#include <QtCore>
+#include <QtCore/QtCore>
 #include <csignal>
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);
@@ -134,8 +134,10 @@ int main(int argc, char **argv)
     signal(SIGTERM, exitHandler);
 
     CmdLineOptions opts;
-    if (!opts.parse()) return 1;
-    else if (opts.help) return 0;
+    if (!opts.parse())
+        return 1;
+    else if (opts.help)
+        return 0;
 
     DcpTime dcpTime;
     dcpTime.connectToServer(opts.serverName, opts.serverPort, opts.deviceName);

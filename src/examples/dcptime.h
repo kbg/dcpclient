@@ -39,7 +39,6 @@ class DcpTime : public QObject
 public:
     explicit DcpTime(QObject *parent = 0);
     virtual ~DcpTime();
-
     void connectToServer(const QString &serverName, quint16 serverPort,
                          const QByteArray &deviceName);
 
@@ -52,6 +51,7 @@ private:
     Q_DISABLE_COPY(DcpTime)
     Dcp::DcpClient m_dcp;
     Dcp::CommandParser m_parser;
+    QByteArray m_timeMode;
 };
 
 #endif // DCPTIME_H
