@@ -40,6 +40,7 @@ class MessageParser
 public:
     MessageParser();
     virtual ~MessageParser();
+    virtual void clear();
     virtual bool parse(const DcpMessage &msg);
     virtual QList<QByteArray> arguments() const;
 
@@ -52,7 +53,7 @@ private:
     Q_DECLARE_PRIVATE(MessageParser)
 };
 
-//class ReplyParserPrivate;
+class ReplyParserPrivate;
 class ReplyParser : public MessageParser
 {
 public:
@@ -62,9 +63,19 @@ public:
     };
 
     ReplyParser();
-    ~ReplyParser();
+    void clear();
     bool parse(const DcpMessage &msg);
+    ReplyType replyType() const;
+    bool isAckReply() const;
+    bool isEoeReply() const;
     int errorCode() const;
+
+protected:
+    ReplyParser(ReplyParserPrivate &dd);
+
+private:
+    Q_DISABLE_COPY(ReplyParser)
+    Q_DECLARE_PRIVATE(ReplyParser)
 };
 
 class CommandParserPrivate;
@@ -75,14 +86,15 @@ public:
         SetCommand,
         GetCommand,
         DefCommand,
-        UndefCommand,
-        UnknownCommand
+        UndefCommand
     };
 
     CommandParser();
+    void clear();
     bool parse(const DcpMessage &msg);
     CommandType commandType() const;
-    QByteArray commandString() const;
+    QByteArray command() const;
+    QByteArray identifier() const;
 
 protected:
     CommandParser(CommandParserPrivate &dd);

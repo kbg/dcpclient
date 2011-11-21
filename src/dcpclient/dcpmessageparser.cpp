@@ -68,6 +68,12 @@ MessageParser::~MessageParser()
     delete d_ptr;
 }
 
+void MessageParser::clear()
+{
+    Q_D(MessageParser);
+    d->args.clear();
+}
+
 bool MessageParser::parse(const DcpMessage &msg)
 {
     Q_D(MessageParser);
@@ -84,24 +90,86 @@ QList<QByteArray> MessageParser::arguments() const
 
 // --------------------------------------------------------------------------
 
-ReplyParser::ReplyParser()
+class ReplyParserPrivate : public MessageParserPrivate
 {
+public:
+    ReplyParserPrivate();
+    ReplyParser::ReplyType replyType;
+    int errorCode;
+};
 
+ReplyParserPrivate::ReplyParserPrivate()
+    : replyType(ReplyParser::EoeReply),
+      errorCode(0)
+{
 }
 
-ReplyParser::~ReplyParser()
+ReplyParser::ReplyParser()
+    : MessageParser(*(new ReplyParserPrivate))
 {
+}
 
+ReplyParser::ReplyParser(ReplyParserPrivate &dd)
+    : MessageParser(dd)
+{
+}
+
+void ReplyParser::clear()
+{
+    Q_D(ReplyParser);
+    MessageParser::clear();
+    d->replyType = EoeReply;
+    d->errorCode = 0;
 }
 
 bool ReplyParser::parse(const DcpMessage &msg)
 {
+    Q_D(ReplyParser);
+    clear();
 
+    // make sure that this is a reply message
+    if (!msg.isReply())
+        return false;
+
+    if (!MessageParser::parse(msg))
+        return false;
+
+    if (d->args.isEmpty())
+        return false;
+
+    bool ok;
+    d->errorCode = d->args.takeFirst().toInt(&ok);
+    if (!ok)
+        return false;
+
+    if ((d->args.size() == 1) && (d->args[0] == "ACK"))
+        d->replyType = AckReply;
+
+    return true;
+}
+
+ReplyParser::ReplyType ReplyParser::replyType() const
+{
+    Q_D(const ReplyParser);
+    return d->replyType;
+}
+
+bool ReplyParser::isAckReply() const
+{
+    Q_D(const ReplyParser);
+    return d->replyType == AckReply;
+}
+
+bool ReplyParser::isEoeReply() const
+{
+    Q_D(const ReplyParser);
+    return d->replyType == EoeReply;
 }
 
 int ReplyParser::errorCode() const
 {
-
+    Q_D(const ReplyParser);
+    return d->errorCode;
 }
 
 // --------------------------------------------------------------------------
@@ -110,12 +178,13 @@ class CommandParserPrivate : public MessageParserPrivate
 {
 public:
     CommandParserPrivate();
-    QByteArray cmdString;
-    CommandParser::CommandType cmdType;
+    QByteArray command;
+    QByteArray identifier;
+    CommandParser::CommandType commandType;
 };
 
 CommandParserPrivate::CommandParserPrivate()
-    : cmdType(CommandParser::UnknownCommand)
+    : commandType(CommandParser::SetCommand)
 {
 }
 
@@ -129,27 +198,45 @@ CommandParser::CommandParser(CommandParserPrivate &dd)
 {
 }
 
+void CommandParser::clear()
+{
+    Q_D(CommandParser);
+    MessageParser::clear();
+    d->command = QByteArray();
+    d->identifier = QByteArray();
+    d->commandType = SetCommand;
+}
+
 bool CommandParser::parse(const DcpMessage &msg)
 {
     Q_D(CommandParser);
+    clear();
 
-    if (!MessageParser::parse(msg)) {
-        d->cmdString = QByteArray();
-        d->cmdType = CommandParser::UnknownCommand;
+    // make sure that this is not a reply message
+    if (msg.isReply())
         return false;
-    }
 
-    d->cmdString = d->args.isEmpty() ? QByteArray() : d->args.takeFirst();
-    if (d->cmdString == "set")
-        d->cmdType = SetCommand;
-    else if (d->cmdString == "get")
-        d->cmdType = GetCommand;
-    else if (d->cmdString == "def")
-        d->cmdType = DefCommand;
-    else if (d->cmdString == "undef")
-        d->cmdType = UndefCommand;
+    if (!MessageParser::parse(msg))
+        return false;
+
+    // command messages need at least a command keyword and an identifier
+    if (d->args.size() < 2)
+        return false;
+
+    d->command = d->args.takeFirst();
+    d->identifier = d->args.takeFirst();
+
+    // parse command type
+    if (d->command == "set")
+        d->commandType = SetCommand;
+    else if (d->command == "get")
+        d->commandType = GetCommand;
+    else if (d->command == "def")
+        d->commandType = DefCommand;
+    else if (d->command == "undef")
+        d->commandType = UndefCommand;
     else
-        d->cmdType = UnknownCommand;
+        return false;
 
     return true;
 }
@@ -157,13 +244,19 @@ bool CommandParser::parse(const DcpMessage &msg)
 CommandParser::CommandType CommandParser::commandType() const
 {
     Q_D(const CommandParser);
-    return d->cmdType;
+    return d->commandType;
 }
 
-QByteArray CommandParser::commandString() const
+QByteArray CommandParser::command() const
 {
     Q_D(const CommandParser);
-    return d->cmdString;
+    return d->command;
+}
+
+QByteArray CommandParser::identifier() const
+{
+    Q_D(const CommandParser);
+    return d->identifier;
 }
 
 } // namespace Dcp

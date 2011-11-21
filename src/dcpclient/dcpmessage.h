@@ -32,7 +32,7 @@ namespace Dcp {
 
 enum AckErrorCode {
     AckNoError = 0,
-    AckUnknowCommandError = 2,
+    AckUnknownCommandError = 2,
     AckParameterError = 3,
     AckWrongModeError = 5
 };
