@@ -32,3 +32,10 @@ qt4_automoc(${dcptime_SRCS})
 add_executable(dcptime ${dcptime_SRCS})
 target_link_libraries(dcptime DcpClient
     ${QT_QTCORE_LIBRARY} ${QT_QTNETWORK_LIBRARY})
+
+## DcpTimeClient example ##
+set(dcptimeclient_SRCS dcptimeclient.cpp dcptimeclient_main.cpp)
+qt4_automoc(${dcptimeclient_SRCS})
+add_executable(dcptimeclient ${dcptimeclient_SRCS})
+target_link_libraries(dcptimeclient DcpClient
+    ${QT_QTCORE_LIBRARY} ${QT_QTNETWORK_LIBRARY} ${QT_QTGUI_LIBRARY})
