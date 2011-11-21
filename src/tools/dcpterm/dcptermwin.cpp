@@ -30,7 +30,7 @@
 #include <QtGui>
 using namespace Dcp;
 
-static QDebug operator << (QDebug debug, const DcpMessage &msg) {
+inline static QDebug operator << (QDebug debug, const DcpMessage &msg) {
     debug.nospace()
         << ((msg.flags() & DcpMessage::PaceFlag) != 0 ? "p" : "-")
         << ((msg.flags() & DcpMessage::GrecoFlag) != 0 ? "g" : "-")

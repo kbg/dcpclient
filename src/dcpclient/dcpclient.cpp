@@ -113,7 +113,7 @@ void DcpClientPrivate::readMessageFromSocket()
     QByteArray rawMsg = socket->read(DcpMessageHeaderSize + msgSize);
 
     // ignore multi-packet messages
-    if (offset != 0 || rawMsg.size() != DcpMessageHeaderSize + msgSize) {
+    if (offset != 0 || rawMsg.size() != int(DcpMessageHeaderSize + msgSize)) {
         qWarning("DcpConnection: Ignoring incoming message. " \
                  "Multi-packet messages are currently not supported.");
     }

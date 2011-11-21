@@ -82,7 +82,7 @@ void DcpMessage::init(const QByteArray &rawMsg)
                 *reinterpret_cast<const quint32 *>(p + DcpMessageDataLenPos));
 
     // check if message size and data size are consistent
-    if (rawMsg.size() != DcpMessageHeaderSize + dataSize) {
+    if (rawMsg.size() != int(DcpMessageHeaderSize + dataSize)) {
         clear();
         return;
     }
