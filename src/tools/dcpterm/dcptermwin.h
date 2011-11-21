@@ -53,6 +53,7 @@ protected slots:
 
 private slots:
     void messageInputFinished();
+    void updateWindowTitle(Dcp::DcpClient::State state);
     void dcp_stateChanged(Dcp::DcpClient::State state);
     void dcp_error(Dcp::DcpClient::Error error);
     void dcp_messageReceived();

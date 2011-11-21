@@ -239,11 +239,15 @@ void DcpTermWin::printError(const QString &errorText)
 
 void DcpTermWin::printLine(const QString &text)
 {
+    QTextCharFormat charFormat = ui->textOutput->currentCharFormat();
+    charFormat.setForeground(Qt::black);
+    ui->textOutput->setCurrentCharFormat(charFormat);
     ui->textOutput->appendPlainText(text);
 }
 
 void DcpTermWin::printLine(const QString &text, const QString &color)
 {
+    //! \todo Use QColor and plain text.
     QString html = text;
     html.replace(" ", "&nbsp;").replace(">", "&gt;").replace("<", "&lt;")
         .replace("\n", "<br>");
@@ -285,12 +289,28 @@ void DcpTermWin::messageInputFinished()
     }
 }
 
+void DcpTermWin::updateWindowTitle(Dcp::DcpClient::State state)
+{
+    if (state == DcpClient::ConnectingState ||
+        state == DcpClient::ConnectedState)
+    {
+        setWindowTitle(tr("%1 - %2:%3 - DCP Terminal")
+                       .arg(QString(m_dcp->deviceName()))
+                       .arg(m_dcp->serverName())
+                       .arg(m_dcp->serverPort()));
+    }
+    else {
+        setWindowTitle(tr("%1 - DCP Terminal")
+                       .arg(QString(m_dcp->deviceName())));
+    }
+}
+
 void DcpTermWin::dcp_stateChanged(DcpClient::State state)
 {
     QString stateText;
     QString color = "blue";
-    QString titleText;
 
+    // update widget states
     if (state == DcpClient::ConnectedState) {
         ui->comboMessage->setEnabled(true);
         ui->comboMessage->setFocus();
@@ -303,6 +323,10 @@ void DcpTermWin::dcp_stateChanged(DcpClient::State state)
         ui->comboMessage->setEnabled(false);
     }
 
+    // update window title
+    updateWindowTitle(state);
+
+    // update status bar
     switch (state)
     {
     case DcpClient::UnconnectedState:
@@ -313,14 +337,10 @@ void DcpTermWin::dcp_stateChanged(DcpClient::State state)
     case DcpClient::HostLookupState:
     case DcpClient::ConnectingState:
         stateText = tr("Connecting");
-        titleText = tr(" - %1:%2").arg(m_dcp->serverName())
-                                  .arg(m_dcp->serverPort());
         break;
     case DcpClient::ConnectedState:
         ui->actionConnect->setChecked(true);
         stateText = tr("Connected");
-        titleText = tr(" - %1:%2").arg(m_dcp->serverName())
-                                  .arg(m_dcp->serverPort());
         if (verboseOutput())
             printLine(tr("Connected to %1:%2 as %3.").arg(m_dcp->serverName())
                          .arg(m_dcp->serverPort())
@@ -331,10 +351,8 @@ void DcpTermWin::dcp_stateChanged(DcpClient::State state)
         stateText = tr("Disconnecting");
         break;
     }
-
     m_connectionStatusLabel->setText(tr("<font color=\"%1\">%2<font>")
                                      .arg(color).arg(stateText));
-    setWindowTitle(tr("DCP Terminal%1").arg(titleText));
 }
 
 void DcpTermWin::dcp_error(DcpClient::Error error)
@@ -392,7 +410,7 @@ void DcpTermWin::dcp_messageReceived()
     }
     else
     {
-        // handle messages sent to us
+        // handle commands sent to us
         DcpMessage outMsg(0, msg.snr(), msg.destination(), msg.source(), "");
 
         // only "set nop" is a valid command
