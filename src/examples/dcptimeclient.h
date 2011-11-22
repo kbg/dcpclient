@@ -50,6 +50,7 @@ protected slots:
     void stateChanged(Dcp::DcpClient::State state);
     void messageReceived();
     void requestValues();
+    void comboTimeZone_activated(const QString &text);
 
 private:
     Q_DISABLE_COPY(DcpTimeClient)

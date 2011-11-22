@@ -48,6 +48,8 @@ DcpTimeClient::DcpTimeClient(QWidget *parent)
                     SLOT(stateChanged(Dcp::DcpClient::State)));
     connect(&m_dcp, SIGNAL(messageReceived()), SLOT(messageReceived()));
     connect(m_timer, SIGNAL(timeout()), SLOT(requestValues()));
+    connect(m_comboTimeZone, SIGNAL(activated(QString)),
+                             SLOT(comboTimeZone_activated(QString)));
 
     QList<QLabel *> labelList;
     labelList << m_labelDate << m_labelTime << m_labelJulian;
@@ -143,8 +145,9 @@ void DcpTimeClient::messageReceived()
         m_labelJulian->setText(text);
         m_julianMsgId = 0;
     } else if (snr == m_modeMsgId) {
-        m_comboTimeZone->setCurrentIndex(
-            m_comboTimeZone->findText(text, Qt::MatchFixedString));
+        int i = m_comboTimeZone->findText(text, Qt::MatchFixedString);
+        if (m_comboTimeZone->currentIndex() != i)
+            m_comboTimeZone->setCurrentIndex(i);
         m_modeMsgId = 0;
     }
 }
@@ -161,6 +164,12 @@ void DcpTimeClient::requestValues()
         m_julianMsgId = m_dcp.sendMessage("dcptime", "get julian");
         m_modeMsgId = m_dcp.sendMessage("dcptime", "get mode");
     }
+}
+
+void DcpTimeClient::comboTimeZone_activated(const QString &text)
+{
+    m_dcp.sendMessage("dcptime", QString("set mode %1")
+                      .arg(text.toLower()).toAscii());
 }
 
 #include "dcptimeclient.moc"
