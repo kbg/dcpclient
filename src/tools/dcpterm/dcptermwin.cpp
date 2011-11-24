@@ -233,25 +233,15 @@ bool DcpTermWin::verboseOutput() const
 
 void DcpTermWin::printError(const QString &errorText)
 {
-    printLine(tr("Error: %1.").arg(errorText), "red");
+    printLine(tr("Error: %1.").arg(errorText), Qt::red);
 }
 
-void DcpTermWin::printLine(const QString &text)
+void DcpTermWin::printLine(const QString &text, const QColor &color)
 {
     QTextCharFormat charFormat = ui->textOutput->currentCharFormat();
-    charFormat.setForeground(Qt::black);
+    charFormat.setForeground(color);
     ui->textOutput->setCurrentCharFormat(charFormat);
     ui->textOutput->appendPlainText(text);
-}
-
-void DcpTermWin::printLine(const QString &text, const QString &color)
-{
-    //! \todo Use QColor and plain text.
-    QString html = text;
-    html.replace(" ", "&nbsp;").replace(">", "&gt;").replace("<", "&lt;")
-        .replace("\n", "<br>");
-    html = QString("<font color=\"%1\">%2</font>").arg(color).arg(html);
-    ui->textOutput->appendHtml(html);
 }
 
 void DcpTermWin::messageInputFinished()
@@ -283,7 +273,7 @@ void DcpTermWin::messageInputFinished()
 
         if (verboseOutput()) {
             Dcp::Message msg(0, snr, m_dcp->deviceName(), destination, data);
-            printLine(formatMessageOutput(msg, false), "blue");
+            printLine(formatMessageOutput(msg, false), Qt::blue);
         }
     }
 }
@@ -306,7 +296,7 @@ void DcpTermWin::updateWindowTitle(Dcp::Client::State state)
 void DcpTermWin::dcp_stateChanged(Dcp::Client::State state)
 {
     QString stateText;
-    QString color = "blue";
+    Qt::GlobalColor color = Qt::blue;
 
     // update widget states
     if (state == Dcp::Client::ConnectedState) {
@@ -330,7 +320,7 @@ void DcpTermWin::dcp_stateChanged(Dcp::Client::State state)
     case Dcp::Client::UnconnectedState:
         ui->actionConnect->setChecked(false);
         stateText = tr("Not connected");
-        color = "red";
+        color = Qt::red;
         break;
     case Dcp::Client::HostLookupState:
     case Dcp::Client::ConnectingState:
@@ -343,14 +333,14 @@ void DcpTermWin::dcp_stateChanged(Dcp::Client::State state)
             printLine(tr("Connected to %1:%2 as %3.").arg(m_dcp->serverName())
                          .arg(m_dcp->serverPort())
                          .arg(QString(m_dcp->deviceName())),
-                      "blue");
+                      Qt::blue);
         break;
     case Dcp::Client::ClosingState:
         stateText = tr("Disconnecting");
         break;
     }
     m_connectionStatusLabel->setText(tr("<font color=\"%1\">%2<font>")
-                                     .arg(color).arg(stateText));
+        .arg(QColor(color).name()).arg(stateText));
 }
 
 void DcpTermWin::dcp_error(Dcp::Client::Error error)
@@ -364,7 +354,7 @@ void DcpTermWin::dcp_messageReceived()
     Dcp::Message msg = m_dcp->readMessage();
 
     if (verboseOutput())
-        printLine(formatMessageOutput(msg, true), "blue");
+        printLine(formatMessageOutput(msg, true), Qt::blue);
 
     if (msg.isReply())
     {
@@ -372,15 +362,15 @@ void DcpTermWin::dcp_messageReceived()
 
         // handle replies
         if (data.isEmpty())
-            printLine(tr("Invalid reply message"), "red");
+            printLine(tr("Invalid reply message"), Qt::red);
         else if (data == "0 ACK")
             ; // do nothing
         else if (data == "2 ACK")
-            printLine(tr("Unknown command"), "red");
+            printLine(tr("Unknown command"), Qt::red);
         else if (data == "3 ACK")
-            printLine(tr("Parameter error"), "red");
+            printLine(tr("Parameter error"), Qt::red);
         else if (data == "5 ACK")
-            printLine(tr("Wrong mode"), "red");
+            printLine(tr("Wrong mode"), Qt::red);
         else
         {
             QStringList args = QString(data).split(" ");
@@ -392,10 +382,10 @@ void DcpTermWin::dcp_messageReceived()
                 printLine(tr("Invalid error code in reply message"));
             else if (errcode > 0)
                 printLine(tr("Command failed, errcode: %1").arg(errcode),
-                          "red");
+                          Qt::red);
             else if (errcode < 0) {
                 printLine(tr("Command returned with warning, errorcode %1")
-                          .arg(errcode), "red");
+                          .arg(errcode), Qt::red);
                 printLine(args.join(" "));
             }
             else {
@@ -419,7 +409,7 @@ void DcpTermWin::dcp_messageReceived()
             m_dcp->sendMessage(outMsg);
 
             if (verboseOutput())
-                printLine(formatMessageOutput(outMsg, false), "blue");
+                printLine(formatMessageOutput(outMsg, false), Qt::blue);
         }
         else
         {
@@ -428,14 +418,14 @@ void DcpTermWin::dcp_messageReceived()
             m_dcp->sendMessage(outMsg);
 
             if (verboseOutput())
-                printLine(formatMessageOutput(outMsg, false), "blue");
+                printLine(formatMessageOutput(outMsg, false), Qt::blue);
 
             outMsg.setFlags(Dcp::Message::ReplyFlag);
             outMsg.setData("0 FIN");
             m_dcp->sendMessage(outMsg);
 
             if (verboseOutput())
-                printLine(formatMessageOutput(outMsg, false), "blue");
+                printLine(formatMessageOutput(outMsg, false), Qt::blue);
         }
     }
 }

@@ -29,6 +29,7 @@
 #include <QtGui/QMainWindow>
 #include <dcpclient.h>
 
+class QColor;
 class QLabel;
 namespace Ui { class DcpTermWin; }
 
@@ -48,8 +49,7 @@ protected:
 
 protected slots:
     void printError(const QString &errorText);
-    void printLine(const QString &text);
-    void printLine(const QString &text, const QString &color);
+    void printLine(const QString &text, const QColor &color = Qt::black);
 
 private slots:
     void messageInputFinished();
