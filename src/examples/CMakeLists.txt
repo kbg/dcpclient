@@ -18,12 +18,6 @@ add_executable(dcplisten ${dcplisten_SRCS})
 target_link_libraries(dcplisten DcpClient
     ${QT_QTCORE_LIBRARY} ${QT_QTNETWORK_LIBRARY})
 
-## DcpSend example ##
-set(dcpsend_SRCS dcpsend.cpp)
-add_executable(dcpsend ${dcpsend_SRCS})
-target_link_libraries(dcpsend DcpClient
-    ${QT_QTCORE_LIBRARY} ${QT_QTNETWORK_LIBRARY})
-
 ## DcpTimeServer example ##
 set(dcptimeserver_SRCS dcptimeserver.cpp dcptimeserver_main.cpp)
 qt4_automoc(${dcptimeserver_SRCS})
