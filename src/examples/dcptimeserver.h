@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef DCPTIME_H
-#define DCPTIME_H
+#ifndef DCPTIMESERVER_H
+#define DCPTIMESERVER_H
 
 #include <dcpclient.h>
 #include <dcpmessageparser.h>
@@ -32,13 +32,13 @@
 #include <QtCore/QString>
 #include <QtCore/QByteArray>
 
-class DcpTime : public QObject
+class DcpTimeServer : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit DcpTime(QObject *parent = 0);
-    virtual ~DcpTime();
+    explicit DcpTimeServer(QObject *parent = 0);
+    virtual ~DcpTimeServer();
     void connectToServer(const QString &serverName, quint16 serverPort,
                          const QByteArray &deviceName);
 
@@ -48,10 +48,10 @@ protected slots:
     void messageReceived();
 
 private:
-    Q_DISABLE_COPY(DcpTime)
+    Q_DISABLE_COPY(DcpTimeServer)
     Dcp::Client m_dcp;
     Dcp::CommandParser m_parser;
     QByteArray m_timeMode;
 };
 
-#endif // DCPTIME_H
+#endif // DCPTIMESERVER_H

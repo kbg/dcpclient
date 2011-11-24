@@ -23,14 +23,14 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "dcptime.h"
+#include "dcptimeserver.h"
 #include <dcpmessage.h>
 #include <dcpmessageparser.h>
 #include <QtCore/QtCore>
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);
 
-DcpTime::DcpTime(QObject *parent)
+DcpTimeServer::DcpTimeServer(QObject *parent)
     : QObject(parent), m_timeMode("utc")
 {
     m_dcp.setAutoReconnect(true);
@@ -41,23 +41,24 @@ DcpTime::DcpTime(QObject *parent)
     connect(&m_dcp, SIGNAL(messageReceived()), SLOT(messageReceived()));
 }
 
-DcpTime::~DcpTime()
+DcpTimeServer::~DcpTimeServer()
 {
     m_dcp.disconnectFromServer();
 }
 
-void DcpTime::connectToServer(const QString &serverName, quint16 serverPort,
-                              const QByteArray &deviceName)
+void DcpTimeServer::connectToServer(const QString &serverName,
+                                    quint16 serverPort,
+                                    const QByteArray &deviceName)
 {
     m_dcp.connectToServer(serverName, serverPort, deviceName);
 }
 
-void DcpTime::error(Dcp::Client::Error error)
+void DcpTimeServer::error(Dcp::Client::Error error)
 {
     cout << "Error: " << m_dcp.errorString() << "." << endl;
 }
 
-void DcpTime::stateChanged(Dcp::Client::State state)
+void DcpTimeServer::stateChanged(Dcp::Client::State state)
 {
     switch (state)
     {
@@ -76,7 +77,7 @@ void DcpTime::stateChanged(Dcp::Client::State state)
     }
 }
 
-void DcpTime::messageReceived()
+void DcpTimeServer::messageReceived()
 {
     Dcp::Message msg = m_dcp.readMessage();
 
@@ -167,4 +168,4 @@ void DcpTime::messageReceived()
     }
 }
 
-#include "dcptime.moc"
+#include "dcptimeserver.moc"

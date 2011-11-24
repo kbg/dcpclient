@@ -23,7 +23,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "dcptime.h"
+#include "dcptimeserver.h"
 #include <QtCore/QtCore>
 #include <csignal>
 
@@ -139,7 +139,7 @@ int main(int argc, char **argv)
     else if (opts.help)
         return 0;
 
-    DcpTime dcpTime;
+    DcpTimeServer dcpTime;
     dcpTime.connectToServer(opts.serverName, opts.serverPort, opts.deviceName);
 
     return app.exec();
