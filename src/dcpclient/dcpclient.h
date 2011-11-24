@@ -71,16 +71,16 @@ public:
 
     quint32 nextSnr() const;
     void setNextSnr(quint32 snr);
-    quint32 incrementSnr();
 
-    quint32 sendMessage(const QByteArray &destination, const QByteArray &data,
+    Message sendMessage(const QByteArray &destination, const QByteArray &data,
                         quint16 flags = 0);
-    quint32 sendMessage(const QByteArray &destination, const QByteArray &data,
+    Message sendMessage(const QByteArray &destination, const QByteArray &data,
                         quint8 userFlags, quint8 dcpFlags);
-    void sendMessage(quint32 snr, const QByteArray &destination,
-                     const QByteArray &data, quint16 flags = 0);
-    void sendMessage(quint32 snr, const QByteArray &destination,
-                     const QByteArray &data, quint8 userFlags, quint8 dcpFlags);
+    Message sendMessage(quint32 snr, const QByteArray &destination,
+                        const QByteArray &data, quint16 flags = 0);
+    Message sendMessage(quint32 snr, const QByteArray &destination,
+                        const QByteArray &data, quint8 userFlags,
+                        quint8 dcpFlags);
     void sendMessage(const Message &message);
 
     int messagesAvailable() const;

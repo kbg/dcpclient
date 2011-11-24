@@ -101,7 +101,7 @@ void DcpTimeClient::stateChanged(Dcp::Client::State state)
     case Dcp::Client::ConnectedState:
         m_stopWatch.start();
         requestValues();
-        m_timer->start(200);
+        m_timer->start(20);
         break;
     case Dcp::Client::UnconnectedState:
         m_timer->stop();
@@ -158,10 +158,10 @@ void DcpTimeClient::requestValues()
         m_stopWatch.hasExpired(1000))
     {
         m_stopWatch.start();
-        m_dateMsgId = m_dcp.sendMessage("dcptime", "get date");
-        m_timeMsgId = m_dcp.sendMessage("dcptime", "get time");
-        m_julianMsgId = m_dcp.sendMessage("dcptime", "get julian");
-        m_modeMsgId = m_dcp.sendMessage("dcptime", "get mode");
+        m_dateMsgId = m_dcp.sendMessage("dcptime", "get date").snr();
+        m_timeMsgId = m_dcp.sendMessage("dcptime", "get time").snr();
+        m_julianMsgId = m_dcp.sendMessage("dcptime", "get julian").snr();
+        m_modeMsgId = m_dcp.sendMessage("dcptime", "get mode").snr();
     }
 }
 

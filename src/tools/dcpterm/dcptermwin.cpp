@@ -279,7 +279,7 @@ void DcpTermWin::messageInputFinished()
     if (!messageText.isEmpty()) {
         QByteArray destination = ui->comboDevice->currentText().toAscii();
         QByteArray data = messageText.toAscii();
-        quint32 snr = m_dcp->sendMessage(destination, data);
+        quint32 snr = m_dcp->sendMessage(destination, data).snr();
 
         if (verboseOutput()) {
             Dcp::Message msg(0, snr, m_dcp->deviceName(), destination, data);

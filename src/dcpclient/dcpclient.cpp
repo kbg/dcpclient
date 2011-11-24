@@ -33,6 +33,7 @@
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QTimer>
 #include <QtNetwork/QTcpSocket>
+#include <limits>
 
 namespace Dcp {
 
@@ -45,6 +46,9 @@ public:
     void readMessageFromSocket();
     void writeMessageToSocket(const Message &msg);
     void registerName(const QByteArray &deviceName);
+    void incrementSnr() {
+        snr = (snr < std::numeric_limits<quint32>::max()) ? snr+1 : 1;
+    }
 
     static Client::State mapSocketState(QAbstractSocket::SocketState state);
     static Client::Error mapSocketError(QAbstractSocket::SocketError error);
@@ -151,7 +155,8 @@ void ClientPrivate::writeMessageToSocket(const Message &msg)
 
 void ClientPrivate::registerName(const QByteArray &deviceName)
 {
-    Message msg(0, 0, deviceName, QByteArray(), "HELO");
+    Message msg(0, snr, deviceName, QByteArray(), "HELO");
+    incrementSnr();
     writeMessageToSocket(msg);
     socket->flush();
 }
@@ -299,45 +304,44 @@ void Client::setNextSnr(quint32 snr)
     d->snr = snr;
 }
 
-quint32 Client::incrementSnr()
-{
-    return d->snr++;
-}
-
-quint32 Client::sendMessage(const QByteArray &destination,
+Message Client::sendMessage(const QByteArray &destination,
                             const QByteArray &data, quint16 flags)
 {
-    Message msg(flags, d->snr++, d->deviceName, destination, data);
+    Message msg(flags, d->snr, d->deviceName, destination, data);
+    d->incrementSnr();
     d->writeMessageToSocket(msg);
-    return msg.snr();
+    return msg;
 }
 
-quint32 Client::sendMessage(const QByteArray &destination,
+Message Client::sendMessage(const QByteArray &destination,
                             const QByteArray &data, quint8 userFlags,
                             quint8 dcpFlags)
 {
-    Message msg(0, d->snr++, d->deviceName, destination, data);
+    Message msg(0, d->snr, d->deviceName, destination, data);
     msg.setDcpFlags(dcpFlags);
     msg.setUserFlags(userFlags);
+    d->incrementSnr();
     d->writeMessageToSocket(msg);
-    return msg.snr();
+    return msg;
 }
 
-void Client::sendMessage(quint32 snr, const QByteArray &destination,
-                         const QByteArray &data, quint16 flags)
+Message Client::sendMessage(quint32 snr, const QByteArray &destination,
+                            const QByteArray &data, quint16 flags)
 {
     Message msg(flags, snr, d->deviceName, destination, data);
     d->writeMessageToSocket(msg);
+    return msg;
 }
 
-void Client::sendMessage(quint32 snr, const QByteArray &destination,
-                         const QByteArray &data, quint8 userFlags,
-                         quint8 dcpFlags)
+Message Client::sendMessage(quint32 snr, const QByteArray &destination,
+                            const QByteArray &data, quint8 userFlags,
+                            quint8 dcpFlags)
 {
     Message msg(0, snr, d->deviceName, destination, data);
     msg.setDcpFlags(dcpFlags);
     msg.setUserFlags(userFlags);
     d->writeMessageToSocket(msg);
+    return msg;
 }
 
 
