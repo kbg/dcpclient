@@ -37,7 +37,7 @@ enum AckErrorCode {
     AckWrongModeError = 5
 };
 
-class DcpMessage
+class Message
 {
 public:
     enum {
@@ -48,11 +48,11 @@ public:
         AckFlags   = UrgentFlag | ReplyFlag
     };
 
-    DcpMessage();
-    DcpMessage(const DcpMessage &other);
-    explicit DcpMessage(const QByteArray &rawMsg);
-    DcpMessage(quint16 flags, quint32 snr, const QByteArray &source,
-               const QByteArray &destination, const QByteArray &data);
+    Message();
+    Message(const Message &other);
+    explicit Message(const QByteArray &rawMsg);
+    Message(quint16 flags, quint32 snr, const QByteArray &source,
+            const QByteArray &destination, const QByteArray &data);
 
     void clear();
     bool isNull() const;
@@ -82,10 +82,10 @@ public:
     void setData(const QByteArray &data);
 
     QByteArray toRawMsg() const;
-    static DcpMessage fromRawMsg(const QByteArray &rawMsg);
+    static Message fromRawMsg(const QByteArray &rawMsg);
 
-    DcpMessage ackMessage(int errorCode = AckNoError) const;
-    DcpMessage replyMessage(const QByteArray &data, int errorCode = 0) const;
+    Message ackMessage(int errorCode = AckNoError) const;
+    Message replyMessage(const QByteArray &data, int errorCode = 0) const;
 
 private:
     //! \todo Move to private d_ptr class.

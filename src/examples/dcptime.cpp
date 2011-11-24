@@ -27,7 +27,6 @@
 #include <dcpmessage.h>
 #include <dcpmessageparser.h>
 #include <QtCore/QtCore>
-using namespace Dcp;
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);
 
@@ -35,11 +34,11 @@ DcpTime::DcpTime(QObject *parent)
     : QObject(parent), m_timeMode("utc")
 {
     m_dcp.setAutoReconnect(true);
-    connect(&m_dcp, SIGNAL(error(Dcp::DcpClient::Error)),
-            this, SLOT(error(Dcp::DcpClient::Error)));
-    connect(&m_dcp, SIGNAL(stateChanged(Dcp::DcpClient::State)),
-            this, SLOT(stateChanged(Dcp::DcpClient::State)));
-    connect(&m_dcp, SIGNAL(messageReceived()), this, SLOT(messageReceived()));
+    connect(&m_dcp, SIGNAL(error(Dcp::Client::Error)),
+                    SLOT(error(Dcp::Client::Error)));
+    connect(&m_dcp, SIGNAL(stateChanged(Dcp::Client::State)),
+                    SLOT(stateChanged(Dcp::Client::State)));
+    connect(&m_dcp, SIGNAL(messageReceived()), SLOT(messageReceived()));
 }
 
 DcpTime::~DcpTime()
@@ -53,23 +52,23 @@ void DcpTime::connectToServer(const QString &serverName, quint16 serverPort,
     m_dcp.connectToServer(serverName, serverPort, deviceName);
 }
 
-void DcpTime::error(DcpClient::Error error)
+void DcpTime::error(Dcp::Client::Error error)
 {
     cout << "Error: " << m_dcp.errorString() << "." << endl;
 }
 
-void DcpTime::stateChanged(DcpClient::State state)
+void DcpTime::stateChanged(Dcp::Client::State state)
 {
     switch (state)
     {
-    case DcpClient::ConnectingState:
+    case Dcp::Client::ConnectingState:
         cout << "Connecting [" << m_dcp.serverName() << ":"
              << m_dcp.serverPort() << "]..." << endl;
         break;
-    case DcpClient::ConnectedState:
+    case Dcp::Client::ConnectedState:
         cout << "Connected [" << m_dcp.deviceName() << "]." << endl;
         break;
-    case DcpClient::UnconnectedState:
+    case Dcp::Client::UnconnectedState:
         cout << "Disconnected." << endl;
         break;
     default:
@@ -79,7 +78,7 @@ void DcpTime::stateChanged(DcpClient::State state)
 
 void DcpTime::messageReceived()
 {
-    DcpMessage msg = m_dcp.readMessage();
+    Dcp::Message msg = m_dcp.readMessage();
 
     // ignore reply messages
     if (msg.isReply())
@@ -87,7 +86,7 @@ void DcpTime::messageReceived()
 
     // parse command messages
     if (!m_parser.parse(msg)) {
-        m_dcp.sendMessage(msg.ackMessage(AckUnknownCommandError));
+        m_dcp.sendMessage(msg.ackMessage(Dcp::AckUnknownCommandError));
         return;
     }
 
@@ -102,16 +101,16 @@ void DcpTime::messageReceived()
             << "mode" << "time" << "date" << "datetime" << "julian";
     switch (m_parser.commandType())
     {
-    case CommandParser::GetCommand:
+    case Dcp::CommandParser::GetCommand:
         // check for valid identifier
         if (!getters.contains(identifier)) {
-            m_dcp.sendMessage(msg.ackMessage(AckUnknownCommandError));
+            m_dcp.sendMessage(msg.ackMessage(Dcp::AckUnknownCommandError));
             return;
         }
 
         // all supported get commands have no additional argument
         if (!args.isEmpty()) {
-            m_dcp.sendMessage(msg.ackMessage(AckParameterError));
+            m_dcp.sendMessage(msg.ackMessage(Dcp::AckParameterError));
             return;
         }
 
@@ -145,13 +144,13 @@ void DcpTime::messageReceived()
         }
         break;
 
-    case CommandParser::SetCommand:
+    case Dcp::CommandParser::SetCommand:
         // only set mode command with one argument
         if (identifier != "mode") {
-            m_dcp.sendMessage(msg.ackMessage(AckUnknownCommandError));
+            m_dcp.sendMessage(msg.ackMessage(Dcp::AckUnknownCommandError));
         }
         else if (args.size() != 1 || (args[0] != "local" && args[0] != "utc")) {
-            m_dcp.sendMessage(msg.ackMessage(AckParameterError));
+            m_dcp.sendMessage(msg.ackMessage(Dcp::AckParameterError));
         }
         else {
             m_dcp.sendMessage(msg.ackMessage());
@@ -160,10 +159,10 @@ void DcpTime::messageReceived()
         }
         break;
 
-    case CommandParser::DefCommand:
-    case CommandParser::UndefCommand:
+    case Dcp::CommandParser::DefCommand:
+    case Dcp::CommandParser::UndefCommand:
         // there are no supported def or undef commands
-        m_dcp.sendMessage(msg.ackMessage(AckUnknownCommandError));
+        m_dcp.sendMessage(msg.ackMessage(Dcp::AckUnknownCommandError));
         break;
     }
 }

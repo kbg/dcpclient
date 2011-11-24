@@ -48,13 +48,13 @@ public:
 protected slots:
     void connected();
     void disconnected();
-    void error(Dcp::DcpClient::Error error);
-    void stateChanged(Dcp::DcpClient::State state);
+    void error(Dcp::Client::Error error);
+    void stateChanged(Dcp::Client::State state);
     void messageReceived();
 
 private:
     Q_DISABLE_COPY(DcpDump)
-    Dcp::DcpClient m_dcp;
+    Dcp::Client m_dcp;
     QMap<QByteArray, QByteArray> m_deviceMap;
 };
 

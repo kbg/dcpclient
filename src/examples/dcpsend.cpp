@@ -26,15 +26,14 @@
 #include <dcpclient.h>
 #include <dcpmessage.h>
 #include <QtCore/QtCore>
-using namespace Dcp;
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);
 static QTextStream cerr(stderr, QIODevice::WriteOnly);
 static QTextStream cin(stdin, QIODevice::ReadOnly);
-static QTextStream & operator << (QTextStream &os, const DcpMessage &msg) {
+static QTextStream & operator << (QTextStream &os, const Dcp::Message &msg) {
     return os
-        << ((msg.flags() & DcpMessage::PaceFlag) != 0 ? "p" : "-")
-        << ((msg.flags() & DcpMessage::GrecoFlag) != 0 ? "g" : "-")
+        << ((msg.flags() & Dcp::Message::PaceFlag) != 0 ? "p" : "-")
+        << ((msg.flags() & Dcp::Message::GrecoFlag) != 0 ? "g" : "-")
         << (msg.isUrgent() ? "u" : "-")
         << (msg.isReply() ? "r" : "-")
         << hex << " [0x" << msg.flags() << dec << "] "
@@ -199,7 +198,7 @@ int main(int argc, char **argv)
     else if (opts.help) return 0;
 
     // Connect to DCP server
-    DcpClient dcp;
+    Dcp::Client dcp;
     dcp.connectToServer(opts.serverName, opts.serverPort, opts.deviceName);
     if (!dcp.waitForConnected()) {
         cerr << "Error: " << dcp.errorString() << endl;
@@ -225,7 +224,7 @@ int main(int argc, char **argv)
         if (!line.isEmpty())
         {
             // Send message to all device in destList
-            DcpMessage msg(0, 0, opts.deviceName, "", line.toAscii());
+            Dcp::Message msg(0, 0, opts.deviceName, "", line.toAscii());
             foreach (QByteArray dest, opts.destList)
             {
                 msg.setSnr(++snr);
@@ -248,7 +247,7 @@ int main(int argc, char **argv)
         // Read incoming messages
         dcp.waitForReadyRead(1);
         while (dcp.messagesAvailable() > 0) {
-            DcpMessage msg = dcp.readMessage();
+            Dcp::Message msg = dcp.readMessage();
             if (opts.verbose)
                 cout << msg << endl;
         }
@@ -262,7 +261,7 @@ int main(int argc, char **argv)
 
         dcp.waitForReadyRead(timeLeft > 0 ? timeLeft : 0);
         while (dcp.messagesAvailable() > 0) {
-            DcpMessage msg = dcp.readMessage();
+            Dcp::Message msg = dcp.readMessage();
             if (opts.verbose)
                 cout << msg << endl;
         }

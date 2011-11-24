@@ -30,10 +30,10 @@
 #include <QtGui>
 using namespace Dcp;
 
-inline static QDebug operator << (QDebug debug, const DcpMessage &msg) {
+inline static QDebug operator << (QDebug debug, const Message &msg) {
     debug.nospace()
-        << ((msg.flags() & DcpMessage::PaceFlag) != 0 ? "p" : "-")
-        << ((msg.flags() & DcpMessage::GrecoFlag) != 0 ? "g" : "-")
+        << ((msg.flags() & Message::PaceFlag) != 0 ? "p" : "-")
+        << ((msg.flags() & Message::GrecoFlag) != 0 ? "g" : "-")
         << (msg.isUrgent() ? "u" : "-")
         << (msg.isReply() ? "r" : "-")
         << hex << " [0x" << msg.flags() << dec << "] "
@@ -45,7 +45,7 @@ inline static QDebug operator << (QDebug debug, const DcpMessage &msg) {
     return debug.space();
 }
 
-inline static QString formatMessageOutput(const DcpMessage &msg, bool incoming)
+inline static QString formatMessageOutput(const Message &msg, bool incoming)
 {
     QString result;
     QTextStream os(&result);
@@ -63,7 +63,7 @@ inline static QString formatMessageOutput(const DcpMessage &msg, bool incoming)
 DcpTermWin::DcpTermWin(QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::DcpTermWin),
-      m_dcp(new DcpClient),
+      m_dcp(new Client),
       m_connectionStatusLabel(new QLabel)
 {
     ui->setupUi(this);
@@ -78,10 +78,10 @@ DcpTermWin::DcpTermWin(QWidget *parent)
     m_dcp->setAutoReconnect(true);
     m_dcp->setReconnectInterval(5000);
     dcp_stateChanged(m_dcp->state());
-    connect(m_dcp, SIGNAL(stateChanged(Dcp::DcpClient::State)),
-            SLOT(dcp_stateChanged(Dcp::DcpClient::State)));
-    connect(m_dcp, SIGNAL(error(Dcp::DcpClient::Error)),
-            SLOT(dcp_error(Dcp::DcpClient::Error)));
+    connect(m_dcp, SIGNAL(stateChanged(Dcp::Client::State)),
+                   SLOT(dcp_stateChanged(Dcp::Client::State)));
+    connect(m_dcp, SIGNAL(error(Dcp::Client::Error)),
+                   SLOT(dcp_error(Dcp::Client::Error)));
     connect(m_dcp, SIGNAL(messageReceived()), SLOT(dcp_messageReceived()));
 
     // load settings and try to connect
@@ -283,17 +283,15 @@ void DcpTermWin::messageInputFinished()
         quint32 snr = m_dcp->sendMessage(destination, data);
 
         if (verboseOutput()) {
-            DcpMessage msg(0, snr, m_dcp->deviceName(), destination, data);
+            Message msg(0, snr, m_dcp->deviceName(), destination, data);
             printLine(formatMessageOutput(msg, false), "blue");
         }
     }
 }
 
-void DcpTermWin::updateWindowTitle(Dcp::DcpClient::State state)
+void DcpTermWin::updateWindowTitle(Dcp::Client::State state)
 {
-    if (state == DcpClient::ConnectingState ||
-        state == DcpClient::ConnectedState)
-    {
+    if (state == Client::ConnectingState || state == Client::ConnectedState) {
         setWindowTitle(tr("%1 - %2:%3 - DCP Terminal")
                        .arg(QString(m_dcp->deviceName()))
                        .arg(m_dcp->serverName())
@@ -305,13 +303,13 @@ void DcpTermWin::updateWindowTitle(Dcp::DcpClient::State state)
     }
 }
 
-void DcpTermWin::dcp_stateChanged(DcpClient::State state)
+void DcpTermWin::dcp_stateChanged(Client::State state)
 {
     QString stateText;
     QString color = "blue";
 
     // update widget states
-    if (state == DcpClient::ConnectedState) {
+    if (state == Client::ConnectedState) {
         ui->comboMessage->setEnabled(true);
         ui->comboMessage->setFocus();
         ui->comboDevice->setEnabled(true);
@@ -329,16 +327,16 @@ void DcpTermWin::dcp_stateChanged(DcpClient::State state)
     // update status bar
     switch (state)
     {
-    case DcpClient::UnconnectedState:
+    case Client::UnconnectedState:
         ui->actionConnect->setChecked(false);
         stateText = tr("Not connected");
         color = "red";
         break;
-    case DcpClient::HostLookupState:
-    case DcpClient::ConnectingState:
+    case Client::HostLookupState:
+    case Client::ConnectingState:
         stateText = tr("Connecting");
         break;
-    case DcpClient::ConnectedState:
+    case Client::ConnectedState:
         ui->actionConnect->setChecked(true);
         stateText = tr("Connected");
         if (verboseOutput())
@@ -347,7 +345,7 @@ void DcpTermWin::dcp_stateChanged(DcpClient::State state)
                          .arg(QString(m_dcp->deviceName())),
                       "blue");
         break;
-    case DcpClient::ClosingState:
+    case Client::ClosingState:
         stateText = tr("Disconnecting");
         break;
     }
@@ -355,7 +353,7 @@ void DcpTermWin::dcp_stateChanged(DcpClient::State state)
                                      .arg(color).arg(stateText));
 }
 
-void DcpTermWin::dcp_error(DcpClient::Error error)
+void DcpTermWin::dcp_error(Client::Error error)
 {
     Q_UNUSED(error)
     printError(m_dcp->errorString());
@@ -363,7 +361,7 @@ void DcpTermWin::dcp_error(DcpClient::Error error)
 
 void DcpTermWin::dcp_messageReceived()
 {
-    DcpMessage msg = m_dcp->readMessage();
+    Message msg = m_dcp->readMessage();
 
     if (verboseOutput())
         printLine(formatMessageOutput(msg, true), "blue");
@@ -411,12 +409,12 @@ void DcpTermWin::dcp_messageReceived()
     else
     {
         // handle commands sent to us
-        DcpMessage outMsg(0, msg.snr(), msg.destination(), msg.source(), "");
+        Message outMsg(0, msg.snr(), msg.destination(), msg.source(), "");
 
         // only "set nop" is a valid command
         if (msg.data().simplified() != "set nop")
         {
-            outMsg.setFlags(DcpMessage::AckFlags);
+            outMsg.setFlags(Message::AckFlags);
             outMsg.setData("2 ACK");
             m_dcp->sendMessage(outMsg);
 
@@ -425,14 +423,14 @@ void DcpTermWin::dcp_messageReceived()
         }
         else
         {
-            outMsg.setFlags(DcpMessage::AckFlags);
+            outMsg.setFlags(Message::AckFlags);
             outMsg.setData("0 ACK");
             m_dcp->sendMessage(outMsg);
 
             if (verboseOutput())
                 printLine(formatMessageOutput(outMsg, false), "blue");
 
-            outMsg.setFlags(DcpMessage::ReplyFlag);
+            outMsg.setFlags(Message::ReplyFlag);
             outMsg.setData("0 FIN");
             m_dcp->sendMessage(outMsg);
 

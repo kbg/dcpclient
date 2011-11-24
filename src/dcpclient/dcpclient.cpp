@@ -36,18 +36,18 @@
 
 namespace Dcp {
 
-class DcpClientPrivate
+class ClientPrivate
 {
 public:
-    explicit DcpClientPrivate(DcpClient *qq);
-    virtual ~DcpClientPrivate();
+    explicit ClientPrivate(Client *qq);
+    virtual ~ClientPrivate();
 
     void readMessageFromSocket();
-    void writeMessageToSocket(const DcpMessage &msg);
+    void writeMessageToSocket(const Message &msg);
     void registerName(const QByteArray &deviceName);
 
-    static DcpClient::State mapSocketState(QAbstractSocket::SocketState state);
-    static DcpClient::Error mapSocketError(QAbstractSocket::SocketError error);
+    static Client::State mapSocketState(QAbstractSocket::SocketState state);
+    static Client::Error mapSocketError(QAbstractSocket::SocketError error);
 
     // private slots
     void _k_connected();
@@ -57,9 +57,9 @@ public:
     void _k_autoReconnectTimeout();
 
     // private data
-    DcpClient * const q;
+    Client * const q;
     QTcpSocket *socket;
-    QQueue<DcpMessage> inQueue;
+    QQueue<Message> inQueue;
     QString serverName;
     quint16 serverPort;
     QByteArray deviceName;
@@ -69,7 +69,7 @@ public:
     quint32 snr;
 };
 
-DcpClientPrivate::DcpClientPrivate(DcpClient *qq)
+ClientPrivate::ClientPrivate(Client *qq)
     : q(qq),
       socket(new QTcpSocket),
       serverPort(0),
@@ -81,124 +81,124 @@ DcpClientPrivate::DcpClientPrivate(DcpClient *qq)
     reconnectTimer->setInterval(30000);
 }
 
-DcpClientPrivate::~DcpClientPrivate()
+ClientPrivate::~ClientPrivate()
 {
     delete socket;
     delete reconnectTimer;
 }
 
-void DcpClientPrivate::readMessageFromSocket()
+void ClientPrivate::readMessageFromSocket()
 {
-    if (socket->bytesAvailable() < DcpFullHeaderSize)
+    if (socket->bytesAvailable() < FullHeaderSize)
         return;
 
-    char pkgHeader[DcpPacketHeaderSize];
+    char pkgHeader[PacketHeaderSize];
     const quint32 *pMsgSize = reinterpret_cast<const quint32 *>(
-                pkgHeader + DcpPacketMsgSizePos);
+                pkgHeader + PacketMsgSizePos);
     const quint32 *pOffset = reinterpret_cast<const quint32 *>(
-                pkgHeader + DcpPacketOffsetPos);
+                pkgHeader + PacketOffsetPos);
 
-    socket->peek(pkgHeader, DcpPacketHeaderSize);
+    socket->peek(pkgHeader, PacketHeaderSize);
     quint32 msgSize = qFromBigEndian(*pMsgSize);
     quint32 offset = qFromBigEndian(*pOffset);
 
     // not enough data (header + message)
-    if (socket->bytesAvailable() < DcpFullHeaderSize + msgSize)
+    if (socket->bytesAvailable() < FullHeaderSize + msgSize)
         return;
 
     // remove packet header from the input buffer
-    socket->read(pkgHeader, DcpPacketHeaderSize);
+    socket->read(pkgHeader, PacketHeaderSize);
 
     // read message data
-    QByteArray rawMsg = socket->read(DcpMessageHeaderSize + msgSize);
+    QByteArray rawMsg = socket->read(MessageHeaderSize + msgSize);
 
     // ignore multi-packet messages
-    if (offset != 0 || rawMsg.size() != int(DcpMessageHeaderSize + msgSize)) {
-        qWarning("DcpConnection: Ignoring incoming message. " \
+    if (offset != 0 || rawMsg.size() != int(MessageHeaderSize + msgSize)) {
+        qWarning("Dcp::Client: Ignoring incoming message. " \
                  "Multi-packet messages are currently not supported.");
     }
     else {
-        inQueue.enqueue(DcpMessage::fromRawMsg(rawMsg));
+        inQueue.enqueue(Message::fromRawMsg(rawMsg));
         emit q->messageReceived();
     }
 }
 
-void DcpClientPrivate::writeMessageToSocket(const DcpMessage &msg)
+void ClientPrivate::writeMessageToSocket(const Message &msg)
 {
     if (msg.isNull()) {
-        qWarning("DcpConnection::sendMessage: Ignoring invalid message.");
+        qWarning("Dcp::Client::sendMessage: Ignoring invalid message.");
         return;
     }
 
-    if (!msg.data().size() + DcpFullHeaderSize > DcpMaxPacketSize) {
-        qWarning("DcpConnection::sendMessage: Skipping large message. " \
+    if (!msg.data().size() + FullHeaderSize > MaxPacketSize) {
+        qWarning("Dcp::Client::sendMessage: Skipping large message. " \
                  "Multi-packet messages are currently not supported.");
         return;
     }
 
-    char pkgHeader[DcpPacketHeaderSize];
+    char pkgHeader[PacketHeaderSize];
     quint32 *pMsgSize = reinterpret_cast<quint32 *>(
-                pkgHeader + DcpPacketMsgSizePos);
+                pkgHeader + PacketMsgSizePos);
     quint32 *pOffset = reinterpret_cast<quint32 *>(
-                pkgHeader + DcpPacketOffsetPos);
+                pkgHeader + PacketOffsetPos);
 
     *pMsgSize = qToBigEndian(static_cast<quint32>(msg.data().size()));
     *pOffset = 0;
 
-    socket->write(pkgHeader, DcpPacketHeaderSize);
+    socket->write(pkgHeader, PacketHeaderSize);
     socket->write(msg.toRawMsg());
 }
 
-void DcpClientPrivate::registerName(const QByteArray &deviceName)
+void ClientPrivate::registerName(const QByteArray &deviceName)
 {
-    DcpMessage msg(0, 0, deviceName, QByteArray(), "HELO");
+    Message msg(0, 0, deviceName, QByteArray(), "HELO");
     writeMessageToSocket(msg);
     socket->flush();
 }
 
-DcpClient::State DcpClientPrivate::mapSocketState(
+Client::State ClientPrivate::mapSocketState(
     QAbstractSocket::SocketState state)
 {
     switch (state)
     {
     case QAbstractSocket::UnconnectedState:
-        return DcpClient::UnconnectedState;
+        return Client::UnconnectedState;
     case QAbstractSocket::HostLookupState:
-        return DcpClient::HostLookupState;
+        return Client::HostLookupState;
     case QAbstractSocket::ConnectingState:
-        return DcpClient::ConnectingState;
+        return Client::ConnectingState;
     case QAbstractSocket::ConnectedState:
-        return DcpClient::ConnectedState;
+        return Client::ConnectedState;
     case QAbstractSocket::ClosingState:
-        return DcpClient::ClosingState;
+        return Client::ClosingState;
     case QAbstractSocket::BoundState:  // Servers sockets only
     case QAbstractSocket::ListeningState:  // Servers sockets only
     default:
-        return DcpClient::UnconnectedState;
+        return Client::UnconnectedState;
     }
 }
 
-DcpClient::Error DcpClientPrivate::mapSocketError(
+Client::Error ClientPrivate::mapSocketError(
     QAbstractSocket::SocketError error)
 {
     switch (error)
     {
     case QAbstractSocket::ConnectionRefusedError:
-        return DcpClient::ConnectionRefusedError;
+        return Client::ConnectionRefusedError;
     case QAbstractSocket::RemoteHostClosedError:
-        return DcpClient::RemoteHostClosedError;
+        return Client::RemoteHostClosedError;
     case QAbstractSocket::HostNotFoundError:
-        return DcpClient::HostNotFoundError;
+        return Client::HostNotFoundError;
     case QAbstractSocket::SocketAccessError:
-        return DcpClient::SocketAccessError;
+        return Client::SocketAccessError;
     case QAbstractSocket::SocketResourceError:
-        return DcpClient::SocketResourceError;
+        return Client::SocketResourceError;
     case QAbstractSocket::SocketTimeoutError:
-        return DcpClient::SocketTimeoutError;
+        return Client::SocketTimeoutError;
     case QAbstractSocket::NetworkError:
-        return DcpClient::NetworkError;
+        return Client::NetworkError;
     case QAbstractSocket::UnsupportedSocketOperationError:
-        return DcpClient::UnsupportedSocketOperationError;
+        return Client::UnsupportedSocketOperationError;
     case QAbstractSocket::UnknownSocketError:
     case QAbstractSocket::DatagramTooLargeError:  // QUdpSocket only
     case QAbstractSocket::AddressInUseError:  // QUdpSocket only
@@ -212,18 +212,18 @@ DcpClient::Error DcpClientPrivate::mapSocketError(
     case QAbstractSocket::ProxyNotFoundError:  // No proxy support
     case QAbstractSocket::ProxyProtocolError:  // No proxy support
     default:
-        return DcpClient::UnknownSocketError;
+        return Client::UnknownSocketError;
     }
 }
 
-void DcpClientPrivate::_k_connected()
+void ClientPrivate::_k_connected()
 {
     // register device name and reemit signal
     registerName(deviceName);
     emit q->connected();
 }
 
-void DcpClientPrivate::_k_socketStateChanged(QAbstractSocket::SocketState state)
+void ClientPrivate::_k_socketStateChanged(QAbstractSocket::SocketState state)
 {
     if (autoReconnect && connectionRequested
                       && state == QAbstractSocket::UnconnectedState)
@@ -234,19 +234,19 @@ void DcpClientPrivate::_k_socketStateChanged(QAbstractSocket::SocketState state)
     emit q->stateChanged(mapSocketState(state));
 }
 
-void DcpClientPrivate::_k_socketError(QAbstractSocket::SocketError error)
+void ClientPrivate::_k_socketError(QAbstractSocket::SocketError error)
 {
     emit q->error(mapSocketError(error));
 }
 
-void DcpClientPrivate::_k_readMessagesFromSocket()
+void ClientPrivate::_k_readMessagesFromSocket()
 {
     // stop if not enough header data is available
-    while (socket->bytesAvailable() >= DcpFullHeaderSize)
+    while (socket->bytesAvailable() >= FullHeaderSize)
         readMessageFromSocket();  // emits messageReceived()
 }
 
-void DcpClientPrivate::_k_autoReconnectTimeout()
+void ClientPrivate::_k_autoReconnectTimeout()
 {
     if (socket->state() == QAbstractSocket::UnconnectedState)
         socket->connectToHost(serverName, serverPort);
@@ -254,9 +254,9 @@ void DcpClientPrivate::_k_autoReconnectTimeout()
 
 // ---------------------------------------------------------------------------
 
-DcpClient::DcpClient(QObject *parent)
+Client::Client(QObject *parent)
     : QObject(parent),
-      d(new DcpClientPrivate(this))
+      d(new ClientPrivate(this))
 {
     connect(d->socket, SIGNAL(connected()), SLOT(_k_connected()));
     connect(d->socket, SIGNAL(disconnected()), SIGNAL(disconnected()));
@@ -268,13 +268,13 @@ DcpClient::DcpClient(QObject *parent)
     connect(d->reconnectTimer, SIGNAL(timeout()), SLOT(_k_autoReconnectTimeout()));
 }
 
-DcpClient::~DcpClient()
+Client::~Client()
 {
     delete d;
 }
 
-void DcpClient::connectToServer(const QString &serverName, quint16 serverPort,
-                                const QByteArray &deviceName)
+void Client::connectToServer(const QString &serverName, quint16 serverPort,
+                             const QByteArray &deviceName)
 {
     d->connectionRequested = true;
     d->serverName = serverName;
@@ -283,125 +283,125 @@ void DcpClient::connectToServer(const QString &serverName, quint16 serverPort,
     d->socket->connectToHost(serverName, serverPort);
 }
 
-void DcpClient::disconnectFromServer()
+void Client::disconnectFromServer()
 {
     d->connectionRequested = false;
     d->socket->disconnectFromHost();
 }
 
-quint32 DcpClient::nextSnr() const
+quint32 Client::nextSnr() const
 {
     return d->snr;
 }
 
-void DcpClient::setNextSnr(quint32 snr)
+void Client::setNextSnr(quint32 snr)
 {
     d->snr = snr;
 }
 
-quint32 DcpClient::incrementSnr()
+quint32 Client::incrementSnr()
 {
     return d->snr++;
 }
 
-quint32 DcpClient::sendMessage(const QByteArray &destination,
-                               const QByteArray &data, quint16 flags)
-{
-    DcpMessage msg(flags, d->snr++, d->deviceName, destination, data);
-    d->writeMessageToSocket(msg);
-    return msg.snr();
-}
-
-quint32 DcpClient::sendMessage(const QByteArray &destination,
-                               const QByteArray &data, quint8 userFlags,
-                               quint8 dcpFlags)
-{
-    DcpMessage msg(0, d->snr++, d->deviceName, destination, data);
-    msg.setDcpFlags(dcpFlags);
-    msg.setUserFlags(userFlags);
-    d->writeMessageToSocket(msg);
-    return msg.snr();
-}
-
-void DcpClient::sendMessage(quint32 snr, const QByteArray &destination,
+quint32 Client::sendMessage(const QByteArray &destination,
                             const QByteArray &data, quint16 flags)
 {
-    DcpMessage msg(flags, snr, d->deviceName, destination, data);
+    Message msg(flags, d->snr++, d->deviceName, destination, data);
     d->writeMessageToSocket(msg);
+    return msg.snr();
 }
 
-void DcpClient::sendMessage(quint32 snr, const QByteArray &destination,
+quint32 Client::sendMessage(const QByteArray &destination,
                             const QByteArray &data, quint8 userFlags,
                             quint8 dcpFlags)
 {
-    DcpMessage msg(0, snr, d->deviceName, destination, data);
+    Message msg(0, d->snr++, d->deviceName, destination, data);
+    msg.setDcpFlags(dcpFlags);
+    msg.setUserFlags(userFlags);
+    d->writeMessageToSocket(msg);
+    return msg.snr();
+}
+
+void Client::sendMessage(quint32 snr, const QByteArray &destination,
+                         const QByteArray &data, quint16 flags)
+{
+    Message msg(flags, snr, d->deviceName, destination, data);
+    d->writeMessageToSocket(msg);
+}
+
+void Client::sendMessage(quint32 snr, const QByteArray &destination,
+                         const QByteArray &data, quint8 userFlags,
+                         quint8 dcpFlags)
+{
+    Message msg(0, snr, d->deviceName, destination, data);
     msg.setDcpFlags(dcpFlags);
     msg.setUserFlags(userFlags);
     d->writeMessageToSocket(msg);
 }
 
 
-void DcpClient::sendMessage(const DcpMessage &message)
+void Client::sendMessage(const Message &message)
 {
     d->writeMessageToSocket(message);
 }
 
-int DcpClient::messagesAvailable() const
+int Client::messagesAvailable() const
 {
     return d->inQueue.size();
 }
 
-DcpMessage DcpClient::readMessage()
+Message Client::readMessage()
 {
-    return d->inQueue.isEmpty() ? DcpMessage() : d->inQueue.dequeue();
+    return d->inQueue.isEmpty() ? Message() : d->inQueue.dequeue();
 }
 
-DcpClient::State DcpClient::state() const
+Client::State Client::state() const
 {
-    return DcpClientPrivate::mapSocketState(d->socket->state());
+    return ClientPrivate::mapSocketState(d->socket->state());
 }
 
-bool DcpClient::isConnected() const
+bool Client::isConnected() const
 {
     return d->socket->state() == QAbstractSocket::ConnectedState;
 }
 
-bool DcpClient::isUnconnected() const
+bool Client::isUnconnected() const
 {
     return d->socket->state() == QAbstractSocket::UnconnectedState;
 }
 
-DcpClient::Error DcpClient::error() const
+Client::Error Client::error() const
 {
-    return DcpClientPrivate::mapSocketError(d->socket->error());
+    return ClientPrivate::mapSocketError(d->socket->error());
 }
 
-QString DcpClient::errorString() const
+QString Client::errorString() const
 {
     return d->socket->errorString();
 }
 
-QString DcpClient::serverName() const
+QString Client::serverName() const
 {
     return d->serverName;
 }
 
-quint16 DcpClient::serverPort() const
+quint16 Client::serverPort() const
 {
     return d->serverPort;
 }
 
-QByteArray DcpClient::deviceName() const
+QByteArray Client::deviceName() const
 {
     return d->deviceName;
 }
 
-bool DcpClient::autoReconnect() const
+bool Client::autoReconnect() const
 {
     return d->autoReconnect;
 }
 
-void DcpClient::setAutoReconnect(bool enable)
+void Client::setAutoReconnect(bool enable)
 {
     d->autoReconnect = enable;
     if (enable && d->connectionRequested
@@ -411,17 +411,17 @@ void DcpClient::setAutoReconnect(bool enable)
         d->reconnectTimer->stop();
 }
 
-int DcpClient::reconnectInterval() const
+int Client::reconnectInterval() const
 {
     return d->reconnectTimer->interval();
 }
 
-void DcpClient::setReconnectInterval(int msecs)
+void Client::setReconnectInterval(int msecs)
 {
     d->reconnectTimer->setInterval(msecs);
 }
 
-bool DcpClient::waitForConnected(int msecs)
+bool Client::waitForConnected(int msecs)
 {
     // register device name if the connection was established
     bool ok = d->socket->waitForConnected(msecs);
@@ -429,14 +429,14 @@ bool DcpClient::waitForConnected(int msecs)
     return ok;
 }
 
-bool DcpClient::waitForDisconnected(int msecs)
+bool Client::waitForDisconnected(int msecs)
 {
     if (d->socket->state() != QAbstractSocket::UnconnectedState)
         return d->socket->waitForDisconnected(msecs);
     return true;
 }
 
-bool DcpClient::waitForReadyRead(int msecs)
+bool Client::waitForReadyRead(int msecs)
 {
     QElapsedTimer stopWatch;
     stopWatch.start();
@@ -457,7 +457,7 @@ bool DcpClient::waitForReadyRead(int msecs)
     return messagesAvailable() != 0;
 }
 
-bool DcpClient::waitForMessagesWritten(int msecs)
+bool Client::waitForMessagesWritten(int msecs)
 {
     QElapsedTimer stopWatch;
     stopWatch.start();

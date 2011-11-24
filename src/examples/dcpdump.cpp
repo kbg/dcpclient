@@ -26,7 +26,6 @@
 #include "dcpdump.h"
 #include <dcpmessage.h>
 #include <QtCore/QtCore>
-using namespace Dcp;
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);
 
@@ -36,13 +35,13 @@ DcpDump::DcpDump(QObject *parent)
     m_dcp.setAutoReconnect(true);
     m_dcp.setReconnectInterval(5000);
 
-    connect(&m_dcp, SIGNAL(connected()), this, SLOT(connected()));
-    connect(&m_dcp, SIGNAL(disconnected()), this, SLOT(disconnected()));
-    connect(&m_dcp, SIGNAL(error(Dcp::DcpClient::Error)),
-            this, SLOT(error(Dcp::DcpClient::Error)));
-    connect(&m_dcp, SIGNAL(stateChanged(Dcp::DcpClient::State)),
-            this, SLOT(stateChanged(Dcp::DcpClient::State)));
-    connect(&m_dcp, SIGNAL(messageReceived()), this, SLOT(messageReceived()));
+    connect(&m_dcp, SIGNAL(connected()), SLOT(connected()));
+    connect(&m_dcp, SIGNAL(disconnected()), SLOT(disconnected()));
+    connect(&m_dcp, SIGNAL(error(Dcp::Client::Error)),
+                    SLOT(error(Dcp::Client::Error)));
+    connect(&m_dcp, SIGNAL(stateChanged(Dcp::Client::State)),
+                    SLOT(stateChanged(Dcp::Client::State)));
+    connect(&m_dcp, SIGNAL(messageReceived()), SLOT(messageReceived()));
 }
 
 DcpDump::~DcpDump()
@@ -76,21 +75,21 @@ void DcpDump::disconnected()
     cout << "Disconnected." << endl;
 }
 
-void DcpDump::error(DcpClient::Error error)
+void DcpDump::error(Dcp::Client::Error error)
 {
     cout << "Error: " << m_dcp.errorString() << "." << endl;
 }
 
-void DcpDump::stateChanged(DcpClient::State state)
+void DcpDump::stateChanged(Dcp::Client::State state)
 {
-    if (state == DcpClient::ConnectingState)
+    if (state == Dcp::Client::ConnectingState)
         cout << "Connecting [" << m_dcp.serverName() << ":"
              << m_dcp.serverPort() << "]..." << endl;
 }
 
 void DcpDump::messageReceived()
 {
-    DcpMessage msg = m_dcp.readMessage();
+    Dcp::Message msg = m_dcp.readMessage();
     QByteArray source = msg.source();
     if (m_deviceMap.contains(source)) {
         msg.setSource(msg.destination());
@@ -98,8 +97,8 @@ void DcpDump::messageReceived()
         m_dcp.sendMessage(msg);
     }
 
-    cout << ((msg.flags() & DcpMessage::PaceFlag) != 0 ? "p" : "-")
-         << ((msg.flags() & DcpMessage::GrecoFlag) != 0 ? "g" : "-")
+    cout << ((msg.flags() & Dcp::Message::PaceFlag) != 0 ? "p" : "-")
+         << ((msg.flags() & Dcp::Message::GrecoFlag) != 0 ? "g" : "-")
          << (msg.isUrgent() ? "u" : "-")
          << (msg.isReply() ? "r" : "-")
          << hex << " [0x" << msg.flags() << dec << "] "

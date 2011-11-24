@@ -25,7 +25,6 @@
 
 #include "dcptimeclient.h"
 #include <QtGui/QtGui>
-using namespace Dcp;
 
 static QTextStream cerr(stderr, QIODevice::WriteOnly);
 
@@ -42,10 +41,10 @@ DcpTimeClient::DcpTimeClient(QWidget *parent)
       m_modeMsgId(0)
 {
     m_dcp.setAutoReconnect(true);
-    connect(&m_dcp, SIGNAL(error(Dcp::DcpClient::Error)),
-                    SLOT(error(Dcp::DcpClient::Error)));
-    connect(&m_dcp, SIGNAL(stateChanged(Dcp::DcpClient::State)),
-                    SLOT(stateChanged(Dcp::DcpClient::State)));
+    connect(&m_dcp, SIGNAL(error(Dcp::Client::Error)),
+                    SLOT(error(Dcp::Client::Error)));
+    connect(&m_dcp, SIGNAL(stateChanged(Dcp::Client::State)),
+                    SLOT(stateChanged(Dcp::Client::State)));
     connect(&m_dcp, SIGNAL(messageReceived()), SLOT(messageReceived()));
     connect(m_timer, SIGNAL(timeout()), SLOT(requestValues()));
     connect(m_comboTimeZone, SIGNAL(activated(QString)),
@@ -88,23 +87,23 @@ void DcpTimeClient::connectToServer(const QString &serverName,
     m_dcp.connectToServer(serverName, serverPort, deviceName);
 }
 
-void DcpTimeClient::error(DcpClient::Error error)
+void DcpTimeClient::error(Dcp::Client::Error error)
 {
     cerr << "Error: " << m_dcp.errorString() << "." << endl;
 }
 
-void DcpTimeClient::stateChanged(DcpClient::State state)
+void DcpTimeClient::stateChanged(Dcp::Client::State state)
 {
     switch (state)
     {
-    case DcpClient::ConnectingState:
+    case Dcp::Client::ConnectingState:
         break;
-    case DcpClient::ConnectedState:
+    case Dcp::Client::ConnectedState:
         m_stopWatch.start();
         requestValues();
         m_timer->start(200);
         break;
-    case DcpClient::UnconnectedState:
+    case Dcp::Client::UnconnectedState:
         m_timer->stop();
         break;
     default:
@@ -114,7 +113,7 @@ void DcpTimeClient::stateChanged(DcpClient::State state)
 
 void DcpTimeClient::messageReceived()
 {
-    DcpMessage msg = m_dcp.readMessage();
+    Dcp::Message msg = m_dcp.readMessage();
 
     if (!msg.isReply())
         return;

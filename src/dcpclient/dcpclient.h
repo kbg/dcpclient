@@ -33,10 +33,10 @@ class QString;
 
 namespace Dcp {
 
-class DcpMessage;
+class Message;
 
-class DcpClientPrivate;
-class DcpClient : public QObject
+class ClientPrivate;
+class Client : public QObject
 {
     Q_OBJECT
     Q_ENUMS(State Error)
@@ -62,8 +62,8 @@ public:
         UnknownSocketError
     };
 
-    explicit DcpClient(QObject *parent = 0);
-    virtual ~DcpClient();
+    explicit Client(QObject *parent = 0);
+    virtual ~Client();
 
     void connectToServer(const QString &serverName, quint16 serverPort,
                          const QByteArray &deviceName);
@@ -81,16 +81,16 @@ public:
                      const QByteArray &data, quint16 flags = 0);
     void sendMessage(quint32 snr, const QByteArray &destination,
                      const QByteArray &data, quint8 userFlags, quint8 dcpFlags);
-    void sendMessage(const DcpMessage &message);
+    void sendMessage(const Message &message);
 
     int messagesAvailable() const;
-    DcpMessage readMessage();
+    Message readMessage();
 
-    DcpClient::State state() const;
+    Client::State state() const;
     bool isConnected() const;
     bool isUnconnected() const;
 
-    DcpClient::Error error() const;
+    Client::Error error() const;
     QString errorString() const;
 
     QString serverName() const;
@@ -110,8 +110,8 @@ public:
 signals:
     void connected();
     void disconnected();
-    void error(Dcp::DcpClient::Error error);
-    void stateChanged(Dcp::DcpClient::State state);
+    void error(Dcp::Client::Error error);
+    void stateChanged(Dcp::Client::State state);
     void messageReceived();
 
 private:
@@ -120,9 +120,9 @@ private:
     Q_PRIVATE_SLOT(d, void _k_socketError(QAbstractSocket::SocketError))
     Q_PRIVATE_SLOT(d, void _k_readMessagesFromSocket())
     Q_PRIVATE_SLOT(d, void _k_autoReconnectTimeout())
-    Q_DISABLE_COPY(DcpClient)
-    friend class DcpClientPrivate;
-    DcpClientPrivate * const d;
+    Q_DISABLE_COPY(Client)
+    friend class ClientPrivate;
+    ClientPrivate * const d;
 };
 
 } // namespace Dcp

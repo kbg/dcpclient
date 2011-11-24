@@ -38,18 +38,18 @@ class QByteArray;
 namespace Dcp {
 
 enum {
-    DcpMessageHeaderSize = 42,
-    DcpMessageDeviceNameSize = 16,
-    DcpMessageFlagsPos = 0,
-    DcpMessageSnrPos = 2,
-    DcpMessageSourcePos = 6,
-    DcpMessageDestinationPos = 22,
-    DcpMessageDataLenPos = 38,
-    DcpPacketHeaderSize = 8,
-    DcpPacketMsgSizePos = 0,
-    DcpPacketOffsetPos = 4,
-    DcpFullHeaderSize = DcpMessageHeaderSize + DcpPacketHeaderSize,
-    DcpMaxPacketSize = 0x10000
+    MessageHeaderSize = 42,
+    MessageDeviceNameSize = 16,
+    MessageFlagsPos = 0,
+    MessageSnrPos = 2,
+    MessageSourcePos = 6,
+    MessageDestinationPos = 22,
+    MessageDataLenPos = 38,
+    PacketHeaderSize = 8,
+    PacketMsgSizePos = 0,
+    PacketOffsetPos = 4,
+    FullHeaderSize = MessageHeaderSize + PacketHeaderSize,
+    MaxPacketSize = 0x10000
 };
 
 void stripRight(QByteArray &ba, char c = '\0');

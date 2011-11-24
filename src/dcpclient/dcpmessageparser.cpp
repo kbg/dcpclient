@@ -74,7 +74,7 @@ void MessageParser::clear()
     d->args.clear();
 }
 
-bool MessageParser::parse(const DcpMessage &msg)
+bool MessageParser::parse(const Message &msg)
 {
     Q_D(MessageParser);
     d->args = msg.data().split(' ');
@@ -122,7 +122,7 @@ void ReplyParser::clear()
     d->errorCode = 0;
 }
 
-bool ReplyParser::parse(const DcpMessage &msg)
+bool ReplyParser::parse(const Message &msg)
 {
     Q_D(ReplyParser);
     clear();
@@ -207,7 +207,7 @@ void CommandParser::clear()
     d->commandType = SetCommand;
 }
 
-bool CommandParser::parse(const DcpMessage &msg)
+bool CommandParser::parse(const Message &msg)
 {
     Q_D(CommandParser);
     clear();

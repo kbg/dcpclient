@@ -43,13 +43,13 @@ public:
                          const QByteArray &deviceName);
 
 protected slots:
-    void error(Dcp::DcpClient::Error error);
-    void stateChanged(Dcp::DcpClient::State state);
+    void error(Dcp::Client::Error error);
+    void stateChanged(Dcp::Client::State state);
     void messageReceived();
 
 private:
     Q_DISABLE_COPY(DcpTime)
-    Dcp::DcpClient m_dcp;
+    Dcp::Client m_dcp;
     Dcp::CommandParser m_parser;
     QByteArray m_timeMode;
 };

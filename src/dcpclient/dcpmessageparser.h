@@ -41,7 +41,7 @@ public:
     MessageParser();
     virtual ~MessageParser();
     virtual void clear();
-    virtual bool parse(const DcpMessage &msg);
+    virtual bool parse(const Message &msg);
     virtual QList<QByteArray> arguments() const;
 
 protected:
@@ -64,7 +64,7 @@ public:
 
     ReplyParser();
     void clear();
-    bool parse(const DcpMessage &msg);
+    bool parse(const Message &msg);
     ReplyType replyType() const;
     bool isAckReply() const;
     bool isEoeReply() const;
@@ -91,7 +91,7 @@ public:
 
     CommandParser();
     void clear();
-    bool parse(const DcpMessage &msg);
+    bool parse(const Message &msg);
     CommandType commandType() const;
     QByteArray command() const;
     QByteArray identifier() const;

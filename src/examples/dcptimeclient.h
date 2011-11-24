@@ -46,15 +46,15 @@ public:
                          const QByteArray &deviceName);
 
 protected slots:
-    void error(Dcp::DcpClient::Error error);
-    void stateChanged(Dcp::DcpClient::State state);
+    void error(Dcp::Client::Error error);
+    void stateChanged(Dcp::Client::State state);
     void messageReceived();
     void requestValues();
     void comboTimeZone_activated(const QString &text);
 
 private:
     Q_DISABLE_COPY(DcpTimeClient)
-    Dcp::DcpClient m_dcp;
+    Dcp::Client m_dcp;
     Dcp::ReplyParser m_parser;
     QLabel *m_labelDate;
     QLabel *m_labelTime;

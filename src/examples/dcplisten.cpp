@@ -26,13 +26,12 @@
 #include <dcpclient.h>
 #include <dcpmessage.h>
 #include <QtCore/QtCore>
-using namespace Dcp;
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);
-static QTextStream & operator << (QTextStream &os, const DcpMessage &msg) {
+static QTextStream & operator << (QTextStream &os, const Dcp::Message &msg) {
     return os
-        << ((msg.flags() & DcpMessage::PaceFlag) != 0 ? "p" : "-")
-        << ((msg.flags() & DcpMessage::GrecoFlag) != 0 ? "g" : "-")
+        << ((msg.flags() & Dcp::Message::PaceFlag) != 0 ? "p" : "-")
+        << ((msg.flags() & Dcp::Message::GrecoFlag) != 0 ? "g" : "-")
         << (msg.isUrgent() ? "u" : "-")
         << (msg.isReply() ? "r" : "-")
         << hex << " [0x" << msg.flags() << dec << "] "
@@ -49,7 +48,7 @@ int main(int argc, char **argv)
     // see https://bugreports.qt.nokia.com/browse/QTBUG-14575
     QCoreApplication app(argc, argv);
 
-    DcpClient dcp;
+    Dcp::Client dcp;
     QString serverName = "localhost";
     quint16 serverPort = 2001;
     QByteArray deviceName = "dcplisten";
@@ -74,7 +73,7 @@ int main(int argc, char **argv)
         }
 
         // Read the message and display it.
-        DcpMessage msg = dcp.readMessage();
+        Dcp::Message msg = dcp.readMessage();
         cout << msg << endl;
 
         // leave the loop if the message data contains `quit'.
