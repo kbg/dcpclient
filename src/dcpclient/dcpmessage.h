@@ -27,6 +27,7 @@
 #define DCPMESSAGE_H
 
 #include <QtCore/QByteArray>
+#include <QtCore/QSharedDataPointer>
 
 namespace Dcp {
 
@@ -37,6 +38,7 @@ enum AckErrorCode {
     AckWrongModeError = 5
 };
 
+class MessageData;
 class Message
 {
 public:
@@ -50,9 +52,11 @@ public:
 
     Message();
     Message(const Message &other);
-    explicit Message(const QByteArray &rawMsg);
     Message(quint16 flags, quint32 snr, const QByteArray &source,
             const QByteArray &destination, const QByteArray &data);
+    ~Message();
+
+    Message & operator=(const Message &other);
 
     void clear();
     bool isNull() const;
@@ -88,19 +92,7 @@ public:
     Message replyMessage(const QByteArray &data, int errorCode = 0) const;
 
 private:
-    //! \todo Move to private d_ptr class.
-    void init(const QByteArray &rawMsg);
-    void init(quint16 flags, quint32 snr, const QByteArray &source,
-              const QByteArray &destination, const QByteArray &data);
-
-private:
-    //! \todo Use implicit sharing, see QSharedDataPointer.
-    bool m_null;
-    quint16 m_flags;
-    quint32 m_snr;
-    QByteArray m_source;
-    QByteArray m_destination;
-    QByteArray m_data;
+    QSharedDataPointer<MessageData> d;
 };
 
 } // namespace Dcp

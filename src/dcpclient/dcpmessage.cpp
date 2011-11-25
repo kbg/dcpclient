@@ -25,10 +25,51 @@
 
 #include "dcpmessage.h"
 #include "dcpclient_p.h"
+#include <QtCore/QSharedData>
 #include <QtCore/QtEndian>
 #include <QtCore/QtAlgorithms>
 
 namespace Dcp {
+
+/*! \internal
+    \brief Implicitly shared message data.
+    \todo Use a static null object instead of the isNull flag. This needs to
+          be carefully implemented to keep the Message class reentrant.
+ */
+class MessageData : public QSharedData
+{
+public:
+    MessageData() : isNull(true), flags(0), snr(0) {}
+    MessageData(const MessageData &other) : QSharedData(other),
+            isNull(other.isNull), flags(other.flags), snr(other.snr) {}
+    MessageData(quint16 flags_, quint32 snr_, const QByteArray &source_,
+            const QByteArray &destination_, const QByteArray &data_);
+
+    bool isNull;
+    quint16 flags;
+    quint32 snr;
+    QByteArray source;
+    QByteArray destination;
+    QByteArray data;
+};
+
+MessageData::MessageData(quint16 flags_, quint32 snr_,
+        const QByteArray &source_, const QByteArray &destination_,
+        const QByteArray &data_)
+    : isNull(false),
+      flags(flags_),
+      snr(snr_),
+      source(source_),
+      destination(destination_),
+      data(data_)
+{
+    source.truncate(MessageDeviceNameSize);
+    stripRight(source);
+    destination.truncate(MessageDeviceNameSize);
+    stripRight(destination);
+}
+
+// -------------------------------------------------------------------------
 
 /*!
     Default constructor.
@@ -38,9 +79,7 @@ namespace Dcp {
     \sa isNull()
  */
 Message::Message()
-    : m_null(true),
-      m_flags(0),
-      m_snr(0)
+    : d(new MessageData)
 {
 }
 
@@ -48,33 +87,159 @@ Message::Message()
     Copy constructor.
  */
 Message::Message(const Message &other)
-    : m_null(other.m_null),
-      m_flags(other.m_flags),
-      m_snr(other.m_snr),
-      m_source(other.m_source),
-      m_destination(other.m_destination),
-      m_data(other.m_data)
+    : d(other.d)
 {
-}
-
-Message::Message(const QByteArray &rawMsg)
-{
-    init(rawMsg);
 }
 
 Message::Message(quint16 flags, quint32 snr, const QByteArray &source,
                  const QByteArray &destination, const QByteArray &data)
+    : d(new MessageData(flags, snr, source, destination, data))
 {
-    init(flags, snr, source, destination, data);
 }
 
-void Message::init(const QByteArray &rawMsg)
+Message::~Message()
+{
+}
+
+Message & Message::operator=(const Message &other)
+{
+    d = other.d;
+    return *this;
+}
+
+void Message::clear()
+{
+    d->isNull = true;
+    d->flags = 0;
+    d->snr = 0;
+    d->source.clear();
+    d->destination.clear();
+    d->data.clear();
+}
+
+bool Message::isNull() const
+{
+    return d->isNull;
+}
+
+quint16 Message::flags() const
+{
+    return d->flags;
+}
+
+void Message::setFlags(quint16 flags)
+{
+    d->isNull = false;
+    d->flags = flags;
+}
+
+quint8 Message::dcpFlags() const
+{
+    return quint8(d->flags & 0x00ff);
+}
+
+void Message::setDcpFlags(quint8 flags)
+{
+    d->isNull = false;
+    d->flags &= 0xff00;
+    d->flags |= quint16(flags);
+}
+
+quint8 Message::userFlags() const
+{
+    return quint8(d->flags >> 8);
+}
+
+void Message::setUserFlags(quint8 flags)
+{
+    d->isNull = false;
+    d->flags &= 0x00ff;
+    d->flags |= quint16(flags) << 8;
+}
+
+bool Message::isUrgent() const
+{
+    return (d->flags & UrgentFlag) != 0;
+}
+
+bool Message::isReply() const
+{
+    return (d->flags & ReplyFlag) != 0;
+}
+
+quint32 Message::snr() const
+{
+    return d->snr;
+}
+
+void Message::setSnr(quint32 snr)
+{
+    d->isNull = false;
+    d->snr = snr;
+}
+
+QByteArray Message::source() const
+{
+    return d->source;
+}
+
+void Message::setSource(const QByteArray &source)
+{
+    d->isNull = false;
+    d->source = source;
+    d->source.truncate(MessageDeviceNameSize);
+}
+
+QByteArray Message::destination() const
+{
+    return d->destination;
+}
+
+void Message::setDestination(const QByteArray &destination)
+{
+    d->isNull = false;
+    d->destination = destination;
+    d->destination.truncate(MessageDeviceNameSize);
+}
+
+QByteArray Message::data() const
+{
+    return d->data;
+}
+
+void Message::setData(const QByteArray &data)
+{
+    d->isNull = false;
+    d->data = data;
+}
+
+QByteArray Message::toRawMsg() const
+{
+    QByteArray msg = d->data.rightJustified(
+                MessageHeaderSize + d->data.size(), '\0', false);
+
+    char *p = msg.data();
+    quint16 *pFlags = reinterpret_cast<quint16 *>(p + MessageFlagsPos);
+    quint32 *pSnr = reinterpret_cast<quint32 *>(p + MessageSnrPos);
+    quint32 *pDataLen = reinterpret_cast<quint32 *>(p + MessageDataLenPos);
+
+    *pFlags = qToBigEndian(d->flags);
+    *pSnr = qToBigEndian(d->snr);
+    qCopy(d->source.constBegin(), d->source.constEnd(), p + MessageSourcePos);
+    qCopy(d->destination.constBegin(), d->destination.constEnd(),
+          p + MessageDestinationPos);
+    *pDataLen = qToBigEndian(static_cast<quint32>(d->data.size()));
+    qCopy(d->data.constBegin(), d->data.constEnd(), p + MessageHeaderSize);
+
+    Q_ASSERT(msg.size() == MessageHeaderSize + d->data.size());
+    return msg;
+}
+
+Message Message::fromRawMsg(const QByteArray &rawMsg)
 {
     // the message must at least contain the header
-    if (rawMsg.size() < MessageHeaderSize) {
-        clear();
-        return;
-    }
+    if (rawMsg.size() < MessageHeaderSize)
+        return Message();
 
     const char *p = rawMsg.constData();
 
@@ -82,10 +247,8 @@ void Message::init(const QByteArray &rawMsg)
                 *reinterpret_cast<const quint32 *>(p + MessageDataLenPos));
 
     // check if message size and data size are consistent
-    if (rawMsg.size() != int(MessageHeaderSize + dataSize)) {
-        clear();
-        return;
-    }
+    if (rawMsg.size() != int(MessageHeaderSize + dataSize))
+        return Message();
 
     quint16 flags = qFromBigEndian(
                 *reinterpret_cast<const quint16 *>(p + MessageFlagsPos));
@@ -98,170 +261,22 @@ void Message::init(const QByteArray &rawMsg)
     QByteArray data = rawMsg.right(dataSize);
 
     // update members
-    init(flags, snr, source, destination, data);
-}
-
-void Message::init(quint16 flags, quint32 snr, const QByteArray &source,
-                   const QByteArray &destination, const QByteArray &data)
-{
-    m_null = false;
-    m_flags = flags;
-    m_snr = snr;
-    m_source = source;
-    m_destination = destination;
-    m_data = data;
-    m_source.truncate(MessageDeviceNameSize);
-    stripRight(m_source);
-    m_destination.truncate(MessageDeviceNameSize);
-    stripRight(m_destination);
-}
-
-void Message::clear()
-{
-    m_null = true;
-    m_flags = 0;
-    m_snr = 0;
-    m_source.clear();
-    m_destination.clear();
-    m_data.clear();
-}
-
-bool Message::isNull() const
-{
-    return m_null;
-}
-
-quint16 Message::flags() const
-{
-    return m_flags;
-}
-
-void Message::setFlags(quint16 flags)
-{
-    m_null = false;
-    m_flags = flags;
-}
-
-quint8 Message::dcpFlags() const
-{
-    return quint8(m_flags & 0x00ff);
-}
-
-void Message::setDcpFlags(quint8 flags)
-{
-    m_null = false;
-    m_flags &= 0xff00;
-    m_flags |= quint16(flags);
-}
-
-quint8 Message::userFlags() const
-{
-    return quint8(m_flags >> 8);
-}
-
-void Message::setUserFlags(quint8 flags)
-{
-    m_null = false;
-    m_flags &= 0x00ff;
-    m_flags |= quint16(flags) << 8;
-}
-
-bool Message::isUrgent() const
-{
-    return (m_flags & UrgentFlag) != 0;
-}
-
-bool Message::isReply() const
-{
-    return (m_flags & ReplyFlag) != 0;
-}
-
-quint32 Message::snr() const
-{
-    return m_snr;
-}
-
-void Message::setSnr(quint32 snr)
-{
-    m_null = false;
-    m_snr = snr;
-}
-
-QByteArray Message::source() const
-{
-    return m_source;
-}
-
-void Message::setSource(const QByteArray &source)
-{
-    m_null = false;
-    m_source = source;
-    m_source.truncate(MessageDeviceNameSize);
-}
-
-QByteArray Message::destination() const
-{
-    return m_destination;
-}
-
-void Message::setDestination(const QByteArray &destination)
-{
-    m_null = false;
-    m_destination = destination;
-    m_destination.truncate(MessageDeviceNameSize);
-}
-
-QByteArray Message::data() const
-{
-    return m_data;
-}
-
-void Message::setData(const QByteArray &data)
-{
-    m_null = false;
-    m_data = data;
-}
-
-QByteArray Message::toRawMsg() const
-{
-    QByteArray msg = m_data.rightJustified(
-                MessageHeaderSize + m_data.size(), '\0', false);
-
-    char *p = msg.data();
-    quint16 *pFlags = reinterpret_cast<quint16 *>(p + MessageFlagsPos);
-    quint32 *pSnr = reinterpret_cast<quint32 *>(p + MessageSnrPos);
-    quint32 *pDataLen = reinterpret_cast<quint32 *>(p + MessageDataLenPos);
-
-    *pFlags = qToBigEndian(m_flags);
-    *pSnr = qToBigEndian(m_snr);
-    qCopy(m_source.constBegin(), m_source.constEnd(), p + MessageSourcePos);
-    qCopy(m_destination.constBegin(), m_destination.constEnd(),
-          p + MessageDestinationPos);
-    *pDataLen = qToBigEndian(static_cast<quint32>(m_data.size()));
-    qCopy(m_data.constBegin(), m_data.constEnd(), p + MessageHeaderSize);
-
-    Q_ASSERT(msg.size() == MessageHeaderSize + m_data.size());
-    return msg;
-}
-
-Message Message::fromRawMsg(const QByteArray &rawMsg)
-{
-    return Message(rawMsg);
+    return Message(flags, snr, source, destination, data);
 }
 
 Message Message::ackMessage(int errorCode) const
 {
     return Message(
-        m_flags | ReplyFlag | UrgentFlag,
-        m_snr, m_destination, m_source,
+        d->flags | ReplyFlag | UrgentFlag,
+        d->snr, d->destination, d->source,
         QByteArray::number(errorCode) + " ACK");
 }
 
 Message Message::replyMessage(const QByteArray &data, int errorCode) const
 {
     return Message(
-        m_flags | ReplyFlag,
-        m_snr, m_destination, m_source,
+        d->flags | ReplyFlag,
+        d->snr, d->destination, d->source,
         QByteArray::number(errorCode) + " " + (data.isEmpty() ? "FIN" : data));
 }
 
