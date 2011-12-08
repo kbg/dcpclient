@@ -94,12 +94,12 @@ class ReplyParserPrivate : public MessageParserPrivate
 {
 public:
     ReplyParserPrivate();
-    ReplyParser::ReplyType replyType;
+    bool isAck;
     int errorCode;
 };
 
 ReplyParserPrivate::ReplyParserPrivate()
-    : replyType(ReplyParser::EoeReply),
+    : isAck(false),
       errorCode(0)
 {
 }
@@ -118,7 +118,7 @@ void ReplyParser::clear()
 {
     Q_D(ReplyParser);
     MessageParser::clear();
-    d->replyType = EoeReply;
+    d->isAck = false;
     d->errorCode = 0;
 }
 
@@ -143,27 +143,15 @@ bool ReplyParser::parse(const Message &msg)
         return false;
 
     if ((d->args.size() == 1) && (d->args[0] == "ACK"))
-        d->replyType = AckReply;
+        d->isAck = true;
 
     return true;
-}
-
-ReplyParser::ReplyType ReplyParser::replyType() const
-{
-    Q_D(const ReplyParser);
-    return d->replyType;
 }
 
 bool ReplyParser::isAckReply() const
 {
     Q_D(const ReplyParser);
-    return d->replyType == AckReply;
-}
-
-bool ReplyParser::isEoeReply() const
-{
-    Q_D(const ReplyParser);
-    return d->replyType == EoeReply;
+    return d->isAck;
 }
 
 int ReplyParser::errorCode() const

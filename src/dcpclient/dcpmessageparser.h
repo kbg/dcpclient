@@ -57,17 +57,10 @@ class ReplyParserPrivate;
 class ReplyParser : public MessageParser
 {
 public:
-    enum ReplyType {
-        AckReply,
-        EoeReply
-    };
-
     ReplyParser();
     void clear();
     bool parse(const Message &msg);
-    ReplyType replyType() const;
     bool isAckReply() const;
-    bool isEoeReply() const;
     int errorCode() const;
 
 protected:
