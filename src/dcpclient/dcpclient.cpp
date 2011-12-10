@@ -37,6 +37,14 @@
 
 namespace Dcp {
 
+/*! \class Client
+    \brief A class that handles the communication with a DCP server.
+ */
+
+
+/*! \internal
+    \brief Private data and implementation of Dcp::Client.
+ */
 class ClientPrivate
 {
 public:
@@ -259,6 +267,7 @@ void ClientPrivate::_k_autoReconnectTimeout()
 
 // ---------------------------------------------------------------------------
 
+/*! \brief Constructor */
 Client::Client(QObject *parent)
     : QObject(parent),
       d(new ClientPrivate(this))
@@ -273,11 +282,15 @@ Client::Client(QObject *parent)
     connect(d->reconnectTimer, SIGNAL(timeout()), SLOT(_k_autoReconnectTimeout()));
 }
 
+/*! \brief Destructor */
 Client::~Client()
 {
     delete d;
 }
 
+/*!
+    \brief Connect to DCP server.
+ */
 void Client::connectToServer(const QString &serverName, quint16 serverPort,
                              const QByteArray &deviceName)
 {
@@ -288,6 +301,9 @@ void Client::connectToServer(const QString &serverName, quint16 serverPort,
     d->socket->connectToHost(serverName, serverPort);
 }
 
+/*!
+    \brief Disconnect from DCP server.
+ */
 void Client::disconnectFromServer()
 {
     d->connectionRequested = false;

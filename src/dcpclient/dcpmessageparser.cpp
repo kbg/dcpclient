@@ -30,6 +30,18 @@
 
 namespace Dcp {
 
+/*! \class MessageParser
+    \brief
+ */
+
+/*! \class ReplyParser
+    \brief
+ */
+
+/*! \class CommandParser
+    \brief
+ */
+
 class MessageParserPrivate
 {
 public:

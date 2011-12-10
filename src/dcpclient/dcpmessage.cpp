@@ -31,6 +31,11 @@
 
 namespace Dcp {
 
+/*! \class Message
+    \brief DCP message class.
+ */
+
+
 /*! \internal
     \brief Implicitly shared message data.
     \todo Use a static null object instead of the isNull flag. This needs to
@@ -71,10 +76,9 @@ MessageData::MessageData(quint16 flags_, quint32 snr_,
 
 // -------------------------------------------------------------------------
 
-/*!
-    Default constructor.
+/*! \brief Default constructor.
 
-    Creates a Null-Message.
+    Creates a Null message, i.e. isNull() returns true.
 
     \sa isNull()
  */
@@ -83,30 +87,50 @@ Message::Message()
 {
 }
 
-/*!
-    Copy constructor.
- */
+/*! \brief Copy constructor. */
 Message::Message(const Message &other)
     : d(other.d)
 {
 }
 
+/*! \brief Constructor.
+
+    \param flags message flags
+    \param snr serial number of the message
+    \param source name of the source device
+    \param destination name of the destination device
+    \param data the message data
+
+    \todo Change the parameter order (flags as last parameter with default
+          value) and add another constructor with separate user/dcp flags.
+
+    \sa flags(), snr(), source(), destination(), data()
+ */
 Message::Message(quint16 flags, quint32 snr, const QByteArray &source,
                  const QByteArray &destination, const QByteArray &data)
     : d(new MessageData(flags, snr, source, destination, data))
 {
 }
 
+/*! \brief Destructor. */
 Message::~Message()
 {
 }
 
+/*! \brief Assignement operator. */
 Message & Message::operator=(const Message &other)
 {
     d = other.d;
     return *this;
 }
 
+/*! \brief Clears the contents of the message.
+
+    After calling this method the object is a Null object, i.e. isNull()
+    returns true.
+
+    \sa isNull()
+ */
 void Message::clear()
 {
     d->isNull = true;
@@ -117,27 +141,34 @@ void Message::clear()
     d->data.clear();
 }
 
+/*! \brief Returns true if the message is a Null message, otherwise returns
+    false.
+ */
 bool Message::isNull() const
 {
     return d->isNull;
 }
 
+/*! \brief Returns the message flags. */
 quint16 Message::flags() const
 {
     return d->flags;
 }
 
+/*! \brief Sets the message flags. */
 void Message::setFlags(quint16 flags)
 {
     d->isNull = false;
     d->flags = flags;
 }
 
+/*! \brief Returns the DCP part of the message flags. */
 quint8 Message::dcpFlags() const
 {
     return quint8(d->flags & 0x00ff);
 }
 
+/*! \brief Sets the DCP part of the message flags. */
 void Message::setDcpFlags(quint8 flags)
 {
     d->isNull = false;
@@ -145,11 +176,13 @@ void Message::setDcpFlags(quint8 flags)
     d->flags |= quint16(flags);
 }
 
+/*! \brief Returns the user part of the message flags. */
 quint8 Message::userFlags() const
 {
     return quint8(d->flags >> 8);
 }
 
+/*! \brief Sets the user part of the message flags. */
 void Message::setUserFlags(quint8 flags)
 {
     d->isNull = false;
@@ -157,32 +190,38 @@ void Message::setUserFlags(quint8 flags)
     d->flags |= quint16(flags) << 8;
 }
 
+/*! \brief Returns true if the UrgentFlag is set; otherwise returns false. */
 bool Message::isUrgent() const
 {
     return (d->flags & UrgentFlag) != 0;
 }
 
+/*! \brief Returns true if the ReplyFlag is set; otherwise returns false. */
 bool Message::isReply() const
 {
     return (d->flags & ReplyFlag) != 0;
 }
 
+/*! \brief Returns the serial number of the message. */
 quint32 Message::snr() const
 {
     return d->snr;
 }
 
+/*! \brief Sets the serial number of the message. */
 void Message::setSnr(quint32 snr)
 {
     d->isNull = false;
     d->snr = snr;
 }
 
+/*! \brief Returns the name of the source device. */
 QByteArray Message::source() const
 {
     return d->source;
 }
 
+/*! \brief Sets the name of the source device. */
 void Message::setSource(const QByteArray &source)
 {
     d->isNull = false;
@@ -190,11 +229,13 @@ void Message::setSource(const QByteArray &source)
     d->source.truncate(MessageDeviceNameSize);
 }
 
+/*! \brief Returns the name of the destination device. */
 QByteArray Message::destination() const
 {
     return d->destination;
 }
 
+/*! \brief Sets the name of the destination device. */
 void Message::setDestination(const QByteArray &destination)
 {
     d->isNull = false;
@@ -202,11 +243,13 @@ void Message::setDestination(const QByteArray &destination)
     d->destination.truncate(MessageDeviceNameSize);
 }
 
+/*! \brief Returns the message data. */
 QByteArray Message::data() const
 {
     return d->data;
 }
 
+/*! \brief Sets the message data. */
 void Message::setData(const QByteArray &data)
 {
     d->isNull = false;
@@ -260,10 +303,16 @@ Message Message::fromRawMsg(const QByteArray &rawMsg)
                 MessageDestinationPos, MessageDeviceNameSize);
     QByteArray data = rawMsg.right(dataSize);
 
-    // update members
     return Message(flags, snr, source, destination, data);
 }
 
+/*! \brief Creates an ACK reply message.
+
+    \param errorCode ACK error code; this should be an error code defined
+           in the enumeration AckErrorCode.
+
+    \sa AckErrorCode, replyMessage()
+ */
 Message Message::ackMessage(int errorCode) const
 {
     return Message(
@@ -272,6 +321,9 @@ Message Message::ackMessage(int errorCode) const
         QByteArray::number(errorCode) + " ACK");
 }
 
+/*! \brief Creates a reply message.
+
+ */
 Message Message::replyMessage(const QByteArray &data, int errorCode) const
 {
     return Message(
