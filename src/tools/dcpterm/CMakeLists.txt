@@ -14,3 +14,5 @@ qt4_wrap_ui(dcpterm_UI_HDRS dcptermwin.ui)
 add_executable(dcpterm ${dcpterm_SRCS} ${dcpterm_UI_HDRS})
 target_link_libraries(dcpterm DcpClient
     ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTNETWORK_LIBRARY})
+
+install(TARGETS dcpterm RUNTIME DESTINATION bin)

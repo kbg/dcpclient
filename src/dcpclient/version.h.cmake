@@ -1,0 +1,21 @@
+#ifndef DCPCLIENT_VERSION_H
+#define DCPCLIENT_VERSION_H
+
+#define DCPCLIENT_VERSION_MAJOR @DCPCLIENT_VERSION_MAJOR@
+#define DCPCLIENT_VERSION_MINOR @DCPCLIENT_VERSION_MINOR@
+#define DCPCLIENT_VERSION_RELEASE @DCPCLIENT_VERSION_RELEASE@
+#define DCPCLIENT_VERSION_STRING "@DCPCLIENT_VERSION_STRING@"
+
+#define DCPCLIENT_VERSION \
+    ((DCPCLIENT_VERSION_MAJOR << 16) | \
+     (DCPCLIENT_VERSION_MINOR << 8) | \
+     (DCPCLIENT_VERSION_RELEASE))
+
+namespace Dcp {
+    unsigned int versionMajor();
+    unsigned int versionMinor();
+    unsigned int versionRelease();
+    const char * versionString();
+}
+
+#endif // DCPCLIENT_VERSION_H
