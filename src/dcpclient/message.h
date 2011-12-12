@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef DCPMESSAGE_H
-#define DCPMESSAGE_H
+#ifndef DCPCLIENT_MESSAGE_H
+#define DCPCLIENT_MESSAGE_H
 
 #include <QtCore/QByteArray>
 #include <QtCore/QSharedDataPointer>
@@ -97,4 +97,4 @@ private:
 
 } // namespace Dcp
 
-#endif // DCPMESSAGE_H
+#endif // DCPCLIENT_MESSAGE_H

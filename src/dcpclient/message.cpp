@@ -23,7 +23,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "dcpmessage.h"
+#include "message.h"
 #include "dcpclient_p.h"
 #include <QtCore/QSharedData>
 #include <QtCore/QtEndian>

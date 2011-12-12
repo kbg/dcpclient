@@ -23,16 +23,17 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef DCPMESSAGEPARSER_H
-#define DCPMESSAGEPARSER_H
+#ifndef DCPCLIENT_MESSAGEPARSER_H
+#define DCPCLIENT_MESSAGEPARSER_H
 
-#include "dcpmessage.h"
 #include <QtCore/qglobal.h>
 
 class QByteArray;
 template <typename T> class QList;
 
 namespace Dcp {
+
+class Message;
 
 class MessageParserPrivate;
 class MessageParser
@@ -99,4 +100,4 @@ private:
 
 } // namespace Dcp
 
-#endif // DCPMESSAGEPARSER_H
+#endif // DCPCLIENT_MESSAGEPARSER_H

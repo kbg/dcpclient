@@ -17,9 +17,9 @@ set(DCPCLIENT_LIB_SOVERSION ${DCPCLIENT_VERSION_MAJOR})
 configure_file(version.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/version.h)
 
 set(libDcpClient_SRCS
-    dcpclient.cpp
-    dcpmessage.cpp
-    dcpmessageparser.cpp
+    client.cpp
+    message.cpp
+    messageparser.cpp
     dcpclient_p.cpp
     version.cpp
 )
@@ -41,11 +41,11 @@ set_target_properties(DcpClient PROPERTIES
     SOVERSION ${DCPCLIENT_LIB_SOVERSION}
 )
 
-install(FILES dcpclient.h
-              dcpmessage.h
-              dcpmessageparser.h
+install(FILES client.h
+              message.h
+              messageparser.h
               ${CMAKE_CURRENT_BINARY_DIR}/version.h
-        DESTINATION include)
+        DESTINATION include/dcpclient)
 
 install(TARGETS DcpClient
         RUNTIME DESTINATION bin

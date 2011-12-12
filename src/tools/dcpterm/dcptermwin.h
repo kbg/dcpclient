@@ -26,8 +26,8 @@
 #ifndef DCPTERMWIN_H
 #define DCPTERMWIN_H
 
+#include <dcpclient/client.h>
 #include <QtGui/QMainWindow>
-#include <dcpclient.h>
 
 class QColor;
 class QLabel;

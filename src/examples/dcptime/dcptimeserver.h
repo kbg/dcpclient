@@ -26,8 +26,8 @@
 #ifndef DCPTIMESERVER_H
 #define DCPTIMESERVER_H
 
-#include <dcpclient.h>
-#include <dcpmessageparser.h>
+#include <dcpclient/client.h>
+#include <dcpclient/messageparser.h>
 #include <QtCore/QObject>
 #include <QtCore/QString>
 #include <QtCore/QByteArray>

@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "dcpmessageparser.h"
-#include "dcpmessage.h"
+#include "messageparser.h"
+#include "message.h"
 #include <QtCore/QList>
 #include <QtCore/QByteArray>
 

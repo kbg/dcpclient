@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef DCPCLIENT_H
-#define DCPCLIENT_H
+#ifndef DCPCLIENT_CLIENT_H
+#define DCPCLIENT_CLIENT_H
 
 #include <QtCore/QObject>
 
@@ -127,4 +127,4 @@ private:
 
 } // namespace Dcp
 
-#endif // DCPCLIENT_H
+#endif // DCPCLIENT_CLIENT_H

@@ -25,7 +25,7 @@
 
 #include "dcptermwin.h"
 #include "ui_dcptermwin.h"
-#include <dcpmessage.h>
+#include <dcpclient/message.h>
 #include <QtCore/QtDebug>
 #include <QtGui/QtGui>
 

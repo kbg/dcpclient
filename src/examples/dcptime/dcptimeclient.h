@@ -26,8 +26,8 @@
 #ifndef DCPTIMECLIENT_H
 #define DCPTIMECLIENT_H
 
-#include <dcpclient.h>
-#include <dcpmessageparser.h>
+#include <dcpclient/client.h>
+#include <dcpclient/messageparser.h>
 #include <QtGui/QWidget>
 #include <QtCore/QElapsedTimer>
 

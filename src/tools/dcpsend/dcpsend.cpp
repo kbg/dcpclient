@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <dcpclient.h>
-#include <dcpmessage.h>
+#include <dcpclient/client.h>
+#include <dcpclient/message.h>
 #include <QtCore/QtCore>
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);

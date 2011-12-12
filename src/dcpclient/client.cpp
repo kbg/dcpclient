@@ -23,9 +23,9 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "dcpclient.h"
+#include "client.h"
+#include "message.h"
 #include "dcpclient_p.h"
-#include "dcpmessage.h"
 #include <QtCore/QString>
 #include <QtCore/QByteArray>
 #include <QtCore/QQueue>
@@ -497,4 +497,4 @@ bool Client::waitForMessagesWritten(int msecs)
 
 } // namespace Dcp
 
-#include "dcpclient.moc"
+#include "client.moc"

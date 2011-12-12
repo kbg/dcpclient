@@ -2,9 +2,9 @@ project(dcpterm)
 
 include_directories(
     ${QT_INCLUDE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
-    ${libDcpClient_SOURCE_DIR}
 )
 
 set(dcpterm_SRCS dcpterm.cpp dcptermwin.cpp)

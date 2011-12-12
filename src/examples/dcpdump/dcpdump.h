@@ -26,7 +26,7 @@
 #ifndef DCPDUMP_H
 #define DCPDUMP_H
 
-#include <dcpclient.h>
+#include <dcpclient/client.h>
 #include <QtCore/QObject>
 #include <QtCore/QString>
 #include <QtCore/QByteArray>
