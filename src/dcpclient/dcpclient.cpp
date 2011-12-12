@@ -130,7 +130,7 @@ void ClientPrivate::readMessageFromSocket()
                  "Multi-packet messages are currently not supported.");
     }
     else {
-        inQueue.enqueue(Message::fromRawMsg(rawMsg));
+        inQueue.enqueue(Message::fromByteArray(rawMsg));
         emit q->messageReceived();
     }
 }
@@ -158,7 +158,7 @@ void ClientPrivate::writeMessageToSocket(const Message &msg)
     *pOffset = 0;
 
     socket->write(pkgHeader, PacketHeaderSize);
-    socket->write(msg.toRawMsg());
+    socket->write(msg.toByteArray());
 }
 
 void ClientPrivate::registerName(const QByteArray &deviceName)

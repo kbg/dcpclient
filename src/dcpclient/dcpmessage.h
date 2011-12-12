@@ -85,8 +85,8 @@ public:
     QByteArray data() const;
     void setData(const QByteArray &data);
 
-    QByteArray toRawMsg() const;
-    static Message fromRawMsg(const QByteArray &rawMsg);
+    QByteArray toByteArray() const;
+    static Message fromByteArray(const QByteArray &rawMsg);
 
     Message ackMessage(int errorCode = AckNoError) const;
     Message replyMessage(const QByteArray &data, int errorCode = 0) const;

@@ -256,7 +256,7 @@ void Message::setData(const QByteArray &data)
     d->data = data;
 }
 
-QByteArray Message::toRawMsg() const
+QByteArray Message::toByteArray() const
 {
     QByteArray msg = d->data.rightJustified(
                 MessageHeaderSize + d->data.size(), '\0', false);
@@ -278,7 +278,7 @@ QByteArray Message::toRawMsg() const
     return msg;
 }
 
-Message Message::fromRawMsg(const QByteArray &rawMsg)
+Message Message::fromByteArray(const QByteArray &rawMsg)
 {
     // the message must at least contain the header
     if (rawMsg.size() < MessageHeaderSize)
