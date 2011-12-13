@@ -41,7 +41,8 @@ set_target_properties(DcpClient PROPERTIES
     SOVERSION ${DCPCLIENT_LIB_SOVERSION}
 )
 
-install(FILES client.h
+install(FILES dcpclient.h
+              client.h
               message.h
               messageparser.h
               ${CMAKE_CURRENT_BINARY_DIR}/version.h
