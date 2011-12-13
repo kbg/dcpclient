@@ -8,8 +8,8 @@ include_directories(
 )
 
 set(dcpdump_SRCS dcpdump.cpp dcpdump_main.cpp)
-qt4_automoc(${dcpdump_SRCS})
-add_executable(dcpdump ${dcpdump_SRCS})
+qt4_wrap_cpp(dcpdump_MOC_SRCS dcpdump.h)
+add_executable(dcpdump ${dcpdump_SRCS} ${dcpdump_MOC_SRCS})
 target_link_libraries(dcpdump DcpClient
     ${QT_QTCORE_LIBRARY} ${QT_QTNETWORK_LIBRARY})
 

@@ -430,8 +430,6 @@ void DcpTermWin::dcp_messageReceived()
     }
 }
 
-#include "dcptermwin.moc"
-
 void DcpTermWin::on_actionConnect_triggered(bool checked)
 {
     if (checked && m_dcp->isUnconnected())

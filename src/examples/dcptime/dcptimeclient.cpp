@@ -171,5 +171,3 @@ void DcpTimeClient::comboTimeZone_activated(const QString &text)
     m_dcp.sendMessage("dcptime", QString("set mode %1")
                       .arg(text.toLower()).toAscii());
 }
-
-#include "dcptimeclient.moc"

@@ -9,9 +9,10 @@ include_directories(
 
 set(dcpterm_SRCS dcpterm.cpp dcptermwin.cpp)
 qt4_automoc(${dcpterm_SRCS})
+qt4_wrap_cpp(dcpterm_MOC_SRCS dcptermwin.h)
 qt4_wrap_ui(dcpterm_UI_HDRS dcptermwin.ui)
 
-add_executable(dcpterm ${dcpterm_SRCS} ${dcpterm_UI_HDRS})
+add_executable(dcpterm ${dcpterm_SRCS} ${dcpterm_MOC_SRCS} ${dcpterm_UI_HDRS})
 target_link_libraries(dcpterm DcpClient
     ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTNETWORK_LIBRARY})
 

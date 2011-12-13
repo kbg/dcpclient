@@ -109,5 +109,3 @@ void DcpDump::messageReceived()
          << "[" << msg.data().size() << "] "
          << msg.data() << endl;
 }
-
-#include "dcpdump.moc"

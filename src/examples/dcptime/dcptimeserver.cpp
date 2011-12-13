@@ -166,5 +166,3 @@ void DcpTimeServer::messageReceived()
         break;
     }
 }
-
-#include "dcptimeserver.moc"
