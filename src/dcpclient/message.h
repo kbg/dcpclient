@@ -43,10 +43,10 @@ class Message
 {
 public:
     enum {
-        PaceFlag   = 0x1,
-        GrecoFlag  = 0x2,
-        UrgentFlag = 0x4,
-        ReplyFlag  = 0x8,
+        PaceFlag   = 0x01,
+        GrecoFlag  = 0x02,
+        UrgentFlag = 0x04,
+        ReplyFlag  = 0x08,
         AckFlags   = UrgentFlag | ReplyFlag
     };
 
