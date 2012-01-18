@@ -231,6 +231,8 @@ Client::Error ClientPrivate::mapSocketError(
 
 void ClientPrivate::_k_connected()
 {
+    //qDebug() << "ClientPrivate::_k_connected";
+
     // register device name and reemit signal
     registerName(deviceName);
     emit q->connected();
@@ -238,6 +240,8 @@ void ClientPrivate::_k_connected()
 
 void ClientPrivate::_k_socketStateChanged(QAbstractSocket::SocketState state)
 {
+    //qDebug() << "ClientPrivate::_k_socketStateChanged:" << state;
+
     if (autoReconnect && connectionRequested
                       && state == QAbstractSocket::UnconnectedState)
         reconnectTimer->start();
@@ -249,11 +253,15 @@ void ClientPrivate::_k_socketStateChanged(QAbstractSocket::SocketState state)
 
 void ClientPrivate::_k_socketError(QAbstractSocket::SocketError error)
 {
+    //qDebug() << "ClientPrivate::_k_socketError:" << error;
+
     emit q->error(mapSocketError(error));
 }
 
 void ClientPrivate::_k_readMessagesFromSocket()
 {
+    //qDebug() << "ClientPrivate::_k_readMessagesFromSocket";
+
     // stop if not enough header data is available
     while (socket->bytesAvailable() >= FullHeaderSize)
         readMessageFromSocket();  // emits messageReceived()
@@ -261,13 +269,15 @@ void ClientPrivate::_k_readMessagesFromSocket()
 
 void ClientPrivate::_k_autoReconnectTimeout()
 {
+    //qDebug() << "ClientPrivate::_k_autoReconnectTimeout";
+
     if (socket->state() == QAbstractSocket::UnconnectedState)
         socket->connectToHost(serverName, serverPort);
 }
 
 // ---------------------------------------------------------------------------
 
-/*! \brief Constructor */
+/*! \brief Constructor. */
 Client::Client(QObject *parent)
     : QObject(parent),
       d(new ClientPrivate(this))
@@ -287,14 +297,25 @@ Client::Client(QObject *parent)
     connect(d->reconnectTimer, SIGNAL(timeout()), SLOT(_k_autoReconnectTimeout()));
 }
 
-/*! \brief Destructor */
+/*! \brief Destructor. */
 Client::~Client()
 {
     delete d;
 }
 
-/*!
-    \brief Connect to DCP server.
+/*! \brief Connect to DCP server.
+
+    \param serverName the host name or IP address of the DCP server
+    \param serverPort the port of the DCP server
+    \param deviceName the name that is used to register the device at the
+           DCP server
+
+    The \a deviceName must have a maximum length of 16 characters. It is used
+    as source or destination in the address fields of DCP messages and must
+    be unique. If another device with the same name is already connected to
+    the DCP server, you will be disconnected immediately.
+
+    \sa disconnectFromServer()
  */
 void Client::connectToServer(const QString &serverName, quint16 serverPort,
                              const QByteArray &deviceName)
