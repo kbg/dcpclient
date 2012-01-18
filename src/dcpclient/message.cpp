@@ -46,7 +46,9 @@ class MessageData : public QSharedData
 public:
     MessageData() : isNull(true), flags(0), snr(0) {}
     MessageData(const MessageData &other) : QSharedData(other),
-            isNull(other.isNull), flags(other.flags), snr(other.snr) {}
+            isNull(other.isNull), flags(other.flags), snr(other.snr),
+            source(other.source), destination(other.destination),
+            data(other.data) {}
     MessageData(quint16 flags_, quint32 snr_, const QByteArray &source_,
             const QByteArray &destination_, const QByteArray &data_);
 
