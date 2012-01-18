@@ -272,13 +272,18 @@ Client::Client(QObject *parent)
     : QObject(parent),
       d(new ClientPrivate(this))
 {
-    connect(d->socket, SIGNAL(connected()), SLOT(_k_connected()));
-    connect(d->socket, SIGNAL(disconnected()), SIGNAL(disconnected()));
+    connect(d->socket, SIGNAL(connected()), SLOT(_k_connected()),
+            Qt::DirectConnection);
+    connect(d->socket, SIGNAL(disconnected()), SIGNAL(disconnected()),
+            Qt::DirectConnection);
     connect(d->socket, SIGNAL(error(QAbstractSocket::SocketError)),
-            SLOT(_k_socketError(QAbstractSocket::SocketError)));
+            SLOT(_k_socketError(QAbstractSocket::SocketError)),
+            Qt::DirectConnection);
     connect(d->socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
-            SLOT(_k_socketStateChanged(QAbstractSocket::SocketState)));
-    connect(d->socket, SIGNAL(readyRead()), SLOT(_k_readMessagesFromSocket()));
+            SLOT(_k_socketStateChanged(QAbstractSocket::SocketState)),
+            Qt::DirectConnection);
+    connect(d->socket, SIGNAL(readyRead()), SLOT(_k_readMessagesFromSocket()),
+            Qt::DirectConnection);
     connect(d->reconnectTimer, SIGNAL(timeout()), SLOT(_k_autoReconnectTimeout()));
 }
 
@@ -443,10 +448,8 @@ void Client::setReconnectInterval(int msecs)
 
 bool Client::waitForConnected(int msecs)
 {
-    // register device name if the connection was established
-    bool ok = d->socket->waitForConnected(msecs);
-    if (ok) d->registerName(d->deviceName);
-    return ok;
+    // the device name will be registered by the _k_connected() handler
+    return d->socket->waitForConnected(msecs);
 }
 
 bool Client::waitForDisconnected(int msecs)
