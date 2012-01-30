@@ -27,21 +27,33 @@
 
 namespace Dcp {
 
+/*! \brief Returns the major part of the DcpClient library version number
+           at runtime.
+ */
 unsigned int versionMajor()
 {
     return DCPCLIENT_VERSION_MAJOR;
 }
 
+/*! \brief Returns the minor part of the DcpClient library version number
+           at runtime.
+ */
 unsigned int versionMinor()
 {
     return DCPCLIENT_VERSION_MINOR;
 }
 
+/*! \brief Returns the release part of the DcpClient library version number
+           at runtime.
+ */
 unsigned int versionRelease()
 {
     return DCPCLIENT_VERSION_RELEASE;
 }
 
+/*! \brief Returns the version number string of the DcpClient library at
+           runtime.
+ */
 const char * versionString()
 {
     return DCPCLIENT_VERSION_STRING;

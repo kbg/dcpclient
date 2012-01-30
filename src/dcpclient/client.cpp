@@ -313,7 +313,8 @@ Client::~Client()
     The \a deviceName must have a maximum length of 16 characters. It is used
     as source or destination in the address fields of DCP messages and must
     be unique. If another device with the same name is already connected to
-    the DCP server, you will be disconnected immediately.
+    the DCP server, any new connection attempt with the same \a deviceName will
+    be terminated immediately.
 
     \sa disconnectFromServer()
  */
@@ -327,25 +328,60 @@ void Client::connectToServer(const QString &serverName, quint16 serverPort,
     d->socket->connectToHost(serverName, serverPort);
 }
 
-/*!
-    \brief Disconnect from DCP server.
- */
+/*! \brief Disconnect from DCP server. */
 void Client::disconnectFromServer()
 {
     d->connectionRequested = false;
     d->socket->disconnectFromHost();
 }
 
+/*! \brief Returns the next serial number.
+
+    The number returned will be used as the next serial number, when one of
+    the two overloaded sendMessage() methods are used where no serial number
+    is specified as parameter, i.e.:
+    - Client::sendMessage(const QByteArray &destination,
+                          const QByteArray &data, quint16 flags)
+    - Client::sendMessage(const QByteArray &destination,
+                          const QByteArray &data, quint8 userFlags,
+                          quint8 dcpFlags)
+
+    \sa setNextSnr(), sendMessage()
+ */
 quint32 Client::nextSnr() const
 {
     return d->snr;
 }
 
+/*! \brief Sets the next serial number.
+
+    The number will be used as the next serial number, when one of
+    the two overloaded sendMessage() methods are used where no serial number
+    is specified as parameter, i.e.:
+    - Client::sendMessage(const QByteArray &destination,
+                          const QByteArray &data, quint16 flags)
+    - Client::sendMessage(const QByteArray &destination,
+                          const QByteArray &data, quint8 userFlags,
+                          quint8 dcpFlags)
+
+    \sa nextSnr(), sendMessage()
+ */
 void Client::setNextSnr(quint32 snr)
 {
     d->snr = snr;
 }
 
+/*! \brief Sends a DCP message and handles the serial number automatically.
+
+    \param destination the name of the destination device
+    \param data the message data
+    \param flags the message flags (combined DCP and user flags)
+    \returns the resulting Message object
+
+    The serial number used
+
+    \sa nextSnr(), setNextSnr()
+ */
 Message Client::sendMessage(const QByteArray &destination,
                             const QByteArray &data, quint16 flags)
 {
@@ -355,6 +391,18 @@ Message Client::sendMessage(const QByteArray &destination,
     return msg;
 }
 
+/*! \brief Sends a DCP message and handles the serial number automatically.
+
+    \param destination the name of the destination device
+    \param data the message data
+    \param userFlags the user flags of the message
+    \param dcpFlags the DCP flags of the message
+    \returns the resulting Message object
+
+    \sa nextSnr(), setNextSnr()
+
+    \todo Swap order of userFlags and dcpFlags
+ */
 Message Client::sendMessage(const QByteArray &destination,
                             const QByteArray &data, quint8 userFlags,
                             quint8 dcpFlags)
@@ -367,6 +415,16 @@ Message Client::sendMessage(const QByteArray &destination,
     return msg;
 }
 
+/*! \brief Sends a DCP message.
+
+    \param snr the serial number of the message
+    \param destination the name of the destination device
+    \param data the message data
+    \param flags the message flags (combined DCP and user flags)
+    \returns the resulting Message object
+
+    This
+ */
 Message Client::sendMessage(quint32 snr, const QByteArray &destination,
                             const QByteArray &data, quint16 flags)
 {
@@ -375,6 +433,17 @@ Message Client::sendMessage(quint32 snr, const QByteArray &destination,
     return msg;
 }
 
+/*! \brief Sends a DCP message.
+
+    \param snr the serial number of the message
+    \param destination the name of the destination device
+    \param data the message data
+    \param userFlags the user flags of the message
+    \param dcpFlags the DCP flags of the message
+    \returns the resulting Message object
+
+    \todo Swap order of userFlags and dcpFlags
+ */
 Message Client::sendMessage(quint32 snr, const QByteArray &destination,
                             const QByteArray &data, quint8 userFlags,
                             quint8 dcpFlags)
@@ -386,12 +455,20 @@ Message Client::sendMessage(quint32 snr, const QByteArray &destination,
     return msg;
 }
 
+/*! \brief Sends a DCP message.
 
+    \param message the message to be sent
+
+    The given message object is sent as is. The user is responsible to set the
+    correct message source; it will not be corrected if it differs from the
+    deviceName of the sending device.
+ */
 void Client::sendMessage(const Message &message)
 {
     d->writeMessageToSocket(message);
 }
 
+/*! \brief Returns the number of available messages. */
 int Client::messagesAvailable() const
 {
     return d->inQueue.size();

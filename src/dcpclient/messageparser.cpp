@@ -31,15 +31,25 @@
 namespace Dcp {
 
 /*! \class MessageParser
-    \brief
+    \brief A generic DCP message parser.
+
+    The MessageParser class is the base class of all specialized message
+    parsers, provided by this library. It parses the data part of a message
+    by simply splitting the data into parts separated by spaces. The result
+    can be accessed by the arguments() method.
+
+    Usually more specialized parsers like ReplyParser or CommandParser should
+    be used, which handle error codes or command types automatically.
+
+    \sa ReplyParser, CommandParser
  */
 
 /*! \class ReplyParser
-    \brief
+    \brief Message parser for reply messages.
  */
 
 /*! \class CommandParser
-    \brief
+    \brief Message parser for command messages.
  */
 
 class MessageParserPrivate
@@ -62,7 +72,7 @@ MessageParserPrivate::~MessageParserPrivate()
 {
 }
 
-
+/*! \brief Constructor. */
 MessageParser::MessageParser()
     : d_ptr(new MessageParserPrivate)
 {
