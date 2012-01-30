@@ -8,11 +8,17 @@ if(BUILD_TOOLS)
 endif()
 
 if(INSTALL_EXAMPLE_SOURCES)
+    configure_file(dcpsend/dcpsend.pro.in
+                   ${CMAKE_CURRENT_BINARY_DIR}/dcpsend.pro)
+    configure_file(dcpterm/dcpterm.pro.in
+                   ${CMAKE_CURRENT_BINARY_DIR}/dcpterm.pro)
     install(FILES dcpsend/dcpsend.cpp
-            DESTINATION share/dcpclient/examples/dcpsend)
+                  ${CMAKE_CURRENT_BINARY_DIR}/dcpsend.pro
+            DESTINATION share/doc/dcpclient/examples/dcpsend)
     install(FILES dcpterm/dcpterm.cpp
                   dcpterm/dcptermwin.h
                   dcpterm/dcptermwin.cpp
                   dcpterm/dcptermwin.ui
-            DESTINATION share/dcpclient/examples/dcpterm)
+                  ${CMAKE_CURRENT_BINARY_DIR}/dcpterm.pro
+            DESTINATION share/doc/dcpclient/examples/dcpterm)
 endif()
