@@ -1,0 +1,11 @@
+TEMPLATE = app
+TARGET = dcptimeclient
+
+QT = core gui svg network
+
+DEPENDPATH += .
+INCLUDEPATH += . ${CMAKE_INSTALL_PREFIX}/include
+LIBS += -L${CMAKE_INSTALL_PREFIX}/lib -lDcpClient -Wl,-rpath,${CMAKE_INSTALL_PREFIX}/lib
+
+HEADERS += dcptimeclient.h
+SOURCES += dcptimeclient.cpp dcptimeclient_main.cpp

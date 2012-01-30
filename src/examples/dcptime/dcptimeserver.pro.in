@@ -1,0 +1,12 @@
+TEMPLATE = app
+TARGET = dcptimeserver
+
+QT = core network
+CONFIG += console
+
+DEPENDPATH += .
+INCLUDEPATH += . ${CMAKE_INSTALL_PREFIX}/include
+LIBS += -L${CMAKE_INSTALL_PREFIX}/lib -lDcpClient -Wl,-rpath,${CMAKE_INSTALL_PREFIX}/lib
+
+HEADERS += dcptimeserver.h
+SOURCES += dcptimeserver.cpp dcptimeserver_main.cpp

@@ -1,0 +1,12 @@
+TEMPLATE = app
+TARGET = dcpdump
+
+QT = core network
+CONFIG += console
+
+DEPENDPATH += .
+INCLUDEPATH += . ${CMAKE_INSTALL_PREFIX}/include
+LIBS += -L${CMAKE_INSTALL_PREFIX}/lib -lDcpClient -Wl,-rpath,${CMAKE_INSTALL_PREFIX}/lib
+
+HEADERS += dcpdump.h
+SOURCES += dcpdump.cpp dcpdump_main.cpp

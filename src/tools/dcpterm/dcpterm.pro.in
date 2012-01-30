@@ -1,0 +1,12 @@
+TEMPLATE = app
+TARGET = dcpterm
+
+QT = core gui svg network
+
+DEPENDPATH += .
+INCLUDEPATH += . ${CMAKE_INSTALL_PREFIX}/include
+LIBS += -L${CMAKE_INSTALL_PREFIX}/lib -lDcpClient -Wl,-rpath,${CMAKE_INSTALL_PREFIX}/lib
+
+HEADERS += dcptermwin.h
+FORMS += dcptermwin.ui
+SOURCES += dcpterm.cpp dcptermwin.cpp
