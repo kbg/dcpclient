@@ -38,7 +38,32 @@
 namespace Dcp {
 
 /*! \class Client
-    \brief A class that handles the communication with a DCP server.
+    \brief Client class for communicating with a DCP server.
+
+    \fn Client::connected()
+    \brief This signal is emitted after connectToServer() has been called
+           and a connection has been successfully established.
+    \sa connectToServer(), disconnected()
+
+    \fn Client::disconnected()
+    \brief This signal is emitted when client has been disconnected from
+           the server.
+    \sa connectToServer(), disconnectFromServer(), connected()
+
+    \fn Client::error(Client::Error error)
+    \brief This signal is emitted after an error occurred. The \a error
+           parameter describes the type of error that occurred.
+    \sa error(), errorString()
+
+    \fn Client::stateChanged(Client::State state)
+    \brief This signal is emitted whenever the Client's state changes.
+           The \a state parameter is the new state.
+    \sa state()
+
+    \fn void Client::messageReceived()
+    \brief This signal is emitted once every time a new message is available
+           for reading.
+    \sa messagesAvailable(), readMessage()
  */
 
 
@@ -277,7 +302,10 @@ void ClientPrivate::_k_autoReconnectTimeout()
 
 // ---------------------------------------------------------------------------
 
-/*! \brief Constructor. */
+/*! \brief Creates a Dcp::Client object.
+
+    The \a parent argument is passed on to the QObject constructor.
+ */
 Client::Client(QObject *parent)
     : QObject(parent),
       d(new ClientPrivate(this))
@@ -297,13 +325,14 @@ Client::Client(QObject *parent)
     connect(d->reconnectTimer, SIGNAL(timeout()), SLOT(_k_autoReconnectTimeout()));
 }
 
-/*! \brief Destructor. */
+/*! \brief Destroys the client, closing the connection if neccessary.
+ */
 Client::~Client()
 {
     delete d;
 }
 
-/*! \brief Connect to DCP server.
+/*! \brief Connects to a DCP server.
 
     \param serverName the host name or IP address of the DCP server
     \param serverPort the port of the DCP server
@@ -316,7 +345,13 @@ Client::~Client()
     the DCP server, any new connection attempt with the same \a deviceName will
     be terminated immediately.
 
-    \sa disconnectFromServer()
+    When a connection is established the connected() signal will be emitted.
+    At any time the client can emit error() to signalize that an error
+    occurred. If the blocking interface is used (i.e. if no message loop
+    exists and the connected() signal can not be handled), you need to call
+    waitForConnected() to wait until the connection is established.
+
+    \sa disconnectFromServer(), connected(), waitForConnected()
  */
 void Client::connectToServer(const QString &serverName, quint16 serverPort,
                              const QByteArray &deviceName)
@@ -328,7 +363,16 @@ void Client::connectToServer(const QString &serverName, quint16 serverPort,
     d->socket->connectToHost(serverName, serverPort);
 }
 
-/*! \brief Disconnect from DCP server. */
+/*! \brief Disconnects from a DCP server.
+
+    Any pending messages will be written to the socket and after that the
+    disconnected() signal will be emitted. If the blocking interface is used
+    (i.e. if no message loop exists and the disconnected() signal can not be
+    handled), you need to call waitForDisconnected() to wait until the
+    connection is closed.
+
+    \sa connectToServer(), disconnected(), waitForDisconnected()
+ */
 void Client::disconnectFromServer()
 {
     d->connectionRequested = false;
@@ -337,9 +381,9 @@ void Client::disconnectFromServer()
 
 /*! \brief Returns the next serial number.
 
-    The number returned will be used as the next serial number, when one of
-    the two overloaded sendMessage() methods are used where no serial number
-    is specified as parameter, i.e.:
+    The number returned will be used as serial number for the next message,
+    if one of the two overloaded sendMessage() methods are used which do
+    not specify a \a snr argument, i.e.:
     - Client::sendMessage(const QByteArray &destination,
                           const QByteArray &data, quint16 flags)
     - Client::sendMessage(const QByteArray &destination,
@@ -355,14 +399,18 @@ quint32 Client::nextSnr() const
 
 /*! \brief Sets the next serial number.
 
-    The number will be used as the next serial number, when one of
-    the two overloaded sendMessage() methods are used where no serial number
-    is specified as parameter, i.e.:
+    The number will be used as serial number for the next message,
+    if one of the two overloaded sendMessage() methods are used which do
+    not specify a \a snr argument, i.e.:
     - Client::sendMessage(const QByteArray &destination,
                           const QByteArray &data, quint16 flags)
     - Client::sendMessage(const QByteArray &destination,
                           const QByteArray &data, quint8 userFlags,
                           quint8 dcpFlags)
+
+    \note It is normally not neccessary to adjust the next serial number
+          manually. The next serial number will be incremented automatically
+          when using the above sendMessage() methods.
 
     \sa nextSnr(), sendMessage()
  */
@@ -376,11 +424,14 @@ void Client::setNextSnr(quint32 snr)
     \param destination the name of the destination device
     \param data the message data
     \param flags the message flags (combined DCP and user flags)
-    \returns the resulting Message object
+    \returns the resulting Message object, which is sent to the DCP server
 
-    The serial number used
+    This method creates a new Message object and sends it to the DCP server.
+    The message's serial number is handled by the Client object and the next
+    serial number is incremented automatically. The source entry of the
+    message is set to the client's deviceName().
 
-    \sa nextSnr(), setNextSnr()
+    \sa nextSnr(), setNextSnr(), deviceName()
  */
 Message Client::sendMessage(const QByteArray &destination,
                             const QByteArray &data, quint16 flags)
@@ -397,9 +448,14 @@ Message Client::sendMessage(const QByteArray &destination,
     \param data the message data
     \param userFlags the user flags of the message
     \param dcpFlags the DCP flags of the message
-    \returns the resulting Message object
+    \returns the resulting Message object, which is sent to the DCP server
 
-    \sa nextSnr(), setNextSnr()
+    This method creates a new Message object and sends it to the DCP server.
+    The message's serial number is handled by the Client object and the next
+    serial number is incremented automatically. The source entry of the
+    message is set to the client's deviceName().
+
+    \sa nextSnr(), setNextSnr(), deviceName()
 
     \todo Swap order of userFlags and dcpFlags
  */
@@ -415,15 +471,20 @@ Message Client::sendMessage(const QByteArray &destination,
     return msg;
 }
 
-/*! \brief Sends a DCP message.
+/*! \brief Sends a DCP message with an arbitrary serial number.
 
     \param snr the serial number of the message
     \param destination the name of the destination device
     \param data the message data
     \param flags the message flags (combined DCP and user flags)
-    \returns the resulting Message object
+    \returns the resulting Message object, which is sent to the DCP server
 
-    This
+    This method creates a new Message object and sends it to the DCP server.
+    The message's serial number is given by the \a snr argument and does not
+    affect the nextSnr() handled by the Client object. The source entry of the
+    message is set to the client's deviceName().
+
+    \sa deviceName()
  */
 Message Client::sendMessage(quint32 snr, const QByteArray &destination,
                             const QByteArray &data, quint16 flags)
@@ -433,14 +494,21 @@ Message Client::sendMessage(quint32 snr, const QByteArray &destination,
     return msg;
 }
 
-/*! \brief Sends a DCP message.
+/*! \brief Sends a DCP message with an arbitrary serial number.
 
     \param snr the serial number of the message
     \param destination the name of the destination device
     \param data the message data
     \param userFlags the user flags of the message
     \param dcpFlags the DCP flags of the message
-    \returns the resulting Message object
+    \returns the resulting Message object, which is sent to the DCP server
+
+    This method creates a new Message object and sends it to the DCP server.
+    The message's serial number is given by the \a snr argument and does not
+    affect the nextSnr() handled by the Client object. The source entry of the
+    message is set to the client's deviceName().
+
+    \sa deviceName()
 
     \todo Swap order of userFlags and dcpFlags
  */
@@ -459,71 +527,143 @@ Message Client::sendMessage(quint32 snr, const QByteArray &destination,
 
     \param message the message to be sent
 
-    The given message object is sent as is. The user is responsible to set the
+    The given Message object is sent as is. The user is responsible to set the
     correct message source; it will not be corrected if it differs from the
-    deviceName of the sending device.
+    deviceName() of the sending Client object.
  */
 void Client::sendMessage(const Message &message)
 {
     d->writeMessageToSocket(message);
 }
 
-/*! \brief Returns the number of available messages. */
+/*! \brief Returns the number of messages that are available for reading.
+
+    \sa readMessage()
+ */
 int Client::messagesAvailable() const
 {
     return d->inQueue.size();
 }
 
+/*! \brief Returns the next available message from the input queue.
+
+    This method returns the next unread message and removes it from the
+    input queue. If no more unread messages are available a null-message is
+    returned.
+
+    \sa messagesAvailable(), Message::isNull()
+ */
 Message Client::readMessage()
 {
     return d->inQueue.isEmpty() ? Message() : d->inQueue.dequeue();
 }
 
+/*! \brief Returns the current state of the client.
+
+    This method can be used to check the current state of the client, e.g. if
+    the client is connected, about to connect, unconnected or about to close
+    the connection.
+
+    \sa isConnected(), stateChanged(), connected(), error()
+ */
 Client::State Client::state() const
 {
     return ClientPrivate::mapSocketState(d->socket->state());
 }
 
+/*! \brief Returns true if the client is in the connected state; otherwise
+           returns false.
+
+    \sa state(), isUnconnected(), connected()
+ */
 bool Client::isConnected() const
 {
     return d->socket->state() == QAbstractSocket::ConnectedState;
 }
 
+/*! \brief Returns true if the client is in the unconnected state; otherwise
+           returns false.
+
+    \sa state(), isUnconnected(), connected()
+ */
 bool Client::isUnconnected() const
 {
     return d->socket->state() == QAbstractSocket::UnconnectedState;
 }
 
+/*! \brief Returns the type of error that last occurred.
+
+    \sa errorString(), state()
+ */
 Client::Error Client::error() const
 {
     return ClientPrivate::mapSocketError(d->socket->error());
 }
 
+/*! \brief Returns a human-readable description of the last error that
+           occurred.
+
+    \sa error()
+ */
 QString Client::errorString() const
 {
     return d->socket->errorString();
 }
 
+/*! \brief Returns the name of the server as specified by connectToServer(),
+           or an empty QString if connectToServer() has not been called yet.
+
+    \sa serverPort(), deviceName()
+ */
 QString Client::serverName() const
 {
     return d->serverName;
 }
 
+/*! \brief Returns the server port as specified by connectToServer(),
+           or 0 if connectToServer() has not been called yet.
+
+    \sa serverName(), deviceName()
+ */
 quint16 Client::serverPort() const
 {
     return d->serverPort;
 }
 
+/*! \brief Returns the device name as specified by connectToServer(),
+           or an empty QString if connectToServer() has not been called yet.
+
+    \sa serverName(), serverPort()
+ */
 QByteArray Client::deviceName() const
 {
     return d->deviceName;
 }
 
+/*! \brief Returns true if the auto-reconnect feature is enabled; otherwise
+           returns false.
+
+    The auto-reconnect feature is disabled by default.
+
+    \sa setAutoReconnect(), reconnectInterval()
+ */
 bool Client::autoReconnect() const
 {
     return d->autoReconnect;
 }
 
+/*! \brief Enables or disables the auto-reconnect feature.
+
+    If the auto-reconnect feature is enabled, the client tries to reconnect
+    to the server if a connection attempt failed or the connection was
+    terminated by the server. The time between each reconnection attempt
+    can be set by using the setReconnectInterval(). If the connection was
+    closed manually using the disconnectFromServer() method, no reconnection
+    attempt will be performed. By default the auto-reconnect feature is
+    disabled and must be enabled explicitly.
+
+    \sa autoReconnect(), setReconnectInterval()
+ */
 void Client::setAutoReconnect(bool enable)
 {
     d->autoReconnect = enable;
@@ -534,22 +674,56 @@ void Client::setAutoReconnect(bool enable)
         d->reconnectTimer->stop();
 }
 
+/*! \brief Returns the auto-reconnect interval in milliseconds.
+
+    The default value of the auto-reconnect interval is 30 seconds.
+
+    \sa setReconnectInterval(), setAutoReconnect()
+ */
 int Client::reconnectInterval() const
 {
     return d->reconnectTimer->interval();
 }
 
+/*! \brief Sets the auto-reconnect interval in milliseconds.
+
+    The default value of the auto-reconnect interval is 30 seconds.
+
+    \sa reconnectInterval(), setAutoReconnect()
+ */
 void Client::setReconnectInterval(int msecs)
 {
     d->reconnectTimer->setInterval(msecs);
 }
 
+/*! \brief Waits until the client is connected to the server, up to \a msecs
+           milliseconds.
+
+    If the connection has been established, this method returns true;
+    otherwise it returns false. If the method returns false, you can call
+    error() to determine the cause of the error. If \a msecs is -1, this
+    method will not time out.
+
+    \note If the method times out, the connection process will be aborted.
+
+    \sa connectToServer(), connected()
+ */
 bool Client::waitForConnected(int msecs)
 {
     // the device name will be registered by the _k_connected() handler
     return d->socket->waitForConnected(msecs);
 }
 
+/*! \brief Waits until the client has disconnected from the server, up to
+           \a msecs milliseconds.
+
+    If the connection has been disconnected, this method returns true;
+    otherwise it returns false. If the method returns false, you can call
+    error() to determine the cause of the error. If \a msecs is -1, this
+    method will not time out.
+
+    \sa disconnectFromServer(), disconnected()
+ */
 bool Client::waitForDisconnected(int msecs)
 {
     if (d->socket->state() != QAbstractSocket::UnconnectedState)
@@ -557,6 +731,16 @@ bool Client::waitForDisconnected(int msecs)
     return true;
 }
 
+/*! \brief Waits until a message is available for reading, up to \a msecs
+           milliseconds.
+
+    This method blocks until a message is available for reading, or until
+    \a msecs milliseconds have passed. If a message is available, this method
+    returns true; otherwise it returns false.  If \a msecs is -1, this
+    method will not time out.
+
+    \sa waitForMessagesWritten(), messageReceived()
+ */
 bool Client::waitForReadyRead(int msecs)
 {
     QElapsedTimer stopWatch;
@@ -578,6 +762,16 @@ bool Client::waitForReadyRead(int msecs)
     return messagesAvailable() != 0;
 }
 
+/*! \brief Waits until all pending messages have been sent, up to \a msecs
+           milliseconds.
+
+    This method blocks until all messages have been written to the socket,
+    or until \a msecs milliseconds have passed. If all messages have been
+    written, this method returns true; otherwise it returns false.  If
+    \a msecs is -1, this method will not time out.
+
+    \sa waitForReadyRead()
+ */
 bool Client::waitForMessagesWritten(int msecs)
 {
     QElapsedTimer stopWatch;

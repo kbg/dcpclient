@@ -46,10 +46,16 @@ namespace Dcp {
 
 /*! \class ReplyParser
     \brief Message parser for reply messages.
+
+    This specialized message parser class can be used to parse reply
+    messages.
  */
 
 /*! \class CommandParser
     \brief Message parser for command messages.
+
+    This specialized message parser class can be used to parse command
+    messages.
  */
 
 class MessageParserPrivate
@@ -72,30 +78,44 @@ MessageParserPrivate::~MessageParserPrivate()
 {
 }
 
-/*! \brief Constructor. */
+/*! \brief Creates a message parser object. */
 MessageParser::MessageParser()
     : d_ptr(new MessageParserPrivate)
 {
     d_ptr->q_ptr = this;
 }
 
+/*! \internal \brief Private data constructor. */
 MessageParser::MessageParser(MessageParserPrivate &dd)
     : d_ptr(&dd)
 {
     d_ptr->q_ptr = this;
 }
 
+/*! Destroys the message parser object. */
 MessageParser::~MessageParser()
 {
     delete d_ptr;
 }
 
+/*! \brief Clears the results from the last parse() call. */
 void MessageParser::clear()
 {
     Q_D(MessageParser);
     d->args.clear();
 }
 
+/*! \brief Parses a DCP message.
+
+    Returns true if the message was successfully parsed; otherwise
+    returns false.
+
+    This implementation simply splits the message data into parts that are
+    separated by space characters (i.e. ASCII code 32). The resulting list can
+    be accessed by using the arguments() method.
+
+    \sa arguments()
+ */
 bool MessageParser::parse(const Message &msg)
 {
     Q_D(MessageParser);
@@ -104,6 +124,13 @@ bool MessageParser::parse(const Message &msg)
     return true;
 }
 
+/*! \brief Returns a list of arguments that were parsed from the last message.
+
+    The arguments that are contained in this list depend on the particular
+    implementation of the parse() method.
+
+    \sa parse(), clear()
+ */
 QList<QByteArray> MessageParser::arguments() const
 {
     Q_D(const MessageParser);
@@ -126,11 +153,13 @@ ReplyParserPrivate::ReplyParserPrivate()
 {
 }
 
+/*! \brief Creates a parser object for reply messages. */
 ReplyParser::ReplyParser()
     : MessageParser(*(new ReplyParserPrivate))
 {
 }
 
+/*! \internal \brief Private data constructor. */
 ReplyParser::ReplyParser(ReplyParserPrivate &dd)
     : MessageParser(dd)
 {
@@ -144,6 +173,23 @@ void ReplyParser::clear()
     d->errorCode = 0;
 }
 
+/*! \brief Parses a reply message.
+
+    Returns true if the reply message was successfully parsed; otherwise
+    returns false.
+
+    This implementation can be used to parse reply messages as specified by
+    the DCP protocol. Each reply message contains an error code and additional
+    arguments. When this method succeeds, the error code has been successfully
+    parsed and can be accessed by using the errorCode() method. All remaining
+    arguments can be accessed by using the arguments() method.
+
+    A special class of reply message are ACK messages, which contain an error
+    code followed by the single argument <code>"ACK"</code>. You can use the
+    isAckReply() method to check if the last parsed message was an ACK reply.
+
+    \sa errorCode(), arguments(), isAckReply()
+ */
 bool ReplyParser::parse(const Message &msg)
 {
     Q_D(ReplyParser);
@@ -170,12 +216,16 @@ bool ReplyParser::parse(const Message &msg)
     return true;
 }
 
+/*! \brief Returns true if the last parsed message was an ACK reply; otherwise
+           returns false.
+ */
 bool ReplyParser::isAckReply() const
 {
     Q_D(const ReplyParser);
     return d->isAck;
 }
 
+/*! \brief Returns the error code of the last parsed message. */
 int ReplyParser::errorCode() const
 {
     Q_D(const ReplyParser);
@@ -198,11 +248,13 @@ CommandParserPrivate::CommandParserPrivate()
 {
 }
 
+/*! \brief Creates a parser object for command messages. */
 CommandParser::CommandParser()
     : MessageParser(*(new CommandParserPrivate))
 {
 }
 
+/*! \internal \brief Private data constructor. */
 CommandParser::CommandParser(CommandParserPrivate &dd)
     : MessageParser(dd)
 {
@@ -217,6 +269,22 @@ void CommandParser::clear()
     d->commandType = SetCommand;
 }
 
+/*! \brief Parses a command message.
+
+    Returns true if the command message was successfully parsed; otherwise
+    returns false.
+
+    This implementation can be used to parse command messages as specified by
+    the DCP protocol. Each command message contains a command
+      (<code>"set"</code>, <code>"get"</code>,
+       <code>"def"</code>, <code>"undef"</code>),
+    an identifier and optional further arguments. The command type can be
+    accessed by using the methods command() or commandType(), the identifier
+    by using the method identifier() and the remaining arguments by using the
+    method arguments().
+
+    \sa command(), commandType(), identifier(), arguments()
+ */
 bool CommandParser::parse(const Message &msg)
 {
     Q_D(CommandParser);
@@ -251,18 +319,22 @@ bool CommandParser::parse(const Message &msg)
     return true;
 }
 
+/*! \brief Returns the command type of the last parsed message as
+           enumeration. */
 CommandParser::CommandType CommandParser::commandType() const
 {
     Q_D(const CommandParser);
     return d->commandType;
 }
 
+/*! \brief Returns the command type of the last parsed message as string. */
 QByteArray CommandParser::command() const
 {
     Q_D(const CommandParser);
     return d->command;
 }
 
+/*! \brief Returns the identifier of the last parsed message. */
 QByteArray CommandParser::identifier() const
 {
     Q_D(const CommandParser);

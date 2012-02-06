@@ -38,7 +38,7 @@ namespace Dcp {
 
 /*! \internal
     \brief Implicitly shared message data.
-    \todo Use a static null object instead of the isNull flag. This needs to
+    \todo Use a static null-object instead of the isNull flag. This needs to
           be carefully implemented to keep the Message class reentrant.
  */
 class MessageData : public QSharedData
@@ -78,9 +78,7 @@ MessageData::MessageData(quint16 flags_, quint32 snr_,
 
 // -------------------------------------------------------------------------
 
-/*! \brief Default constructor.
-
-    Creates a Null message, i.e. isNull() returns true.
+/*! \brief Creates a null-message, i.e. isNull() returns true.
 
     \sa isNull()
  */
@@ -95,7 +93,7 @@ Message::Message(const Message &other)
 {
 }
 
-/*! \brief Constructor.
+/*! \brief Creates a Dcp::Message object.
 
     \param flags message flags
     \param snr serial number of the message
@@ -114,7 +112,7 @@ Message::Message(quint16 flags, quint32 snr, const QByteArray &source,
 {
 }
 
-/*! \brief Destructor. */
+/*! \brief Destroys the message object. */
 Message::~Message()
 {
 }
@@ -128,7 +126,7 @@ Message & Message::operator=(const Message &other)
 
 /*! \brief Clears the contents of the message.
 
-    After calling this method the object is a Null object, i.e. isNull()
+    After calling this method the object is a null-object, i.e. isNull()
     returns true.
 
     \sa isNull()
@@ -143,7 +141,7 @@ void Message::clear()
     d->data.clear();
 }
 
-/*! \brief Returns true if the message is a Null message, otherwise returns
+/*! \brief Returns true if the message is a null-message, otherwise returns
     false.
  */
 bool Message::isNull() const
@@ -258,6 +256,10 @@ void Message::setData(const QByteArray &data)
     d->data = data;
 }
 
+/*! \brief Converts the Message object to a QByteArray.
+
+    \sa fromByteArray()
+ */
 QByteArray Message::toByteArray() const
 {
     QByteArray msg = d->data.rightJustified(
@@ -280,6 +282,14 @@ QByteArray Message::toByteArray() const
     return msg;
 }
 
+/*! \brief Converts a QByteArray to a new Message object.
+
+    This method parses a QByteArray and returns a new Message object. If
+    something went wrong during the parsing, a null-message object is
+    returned.
+
+    \sa toByteArray(), Message::isNull()
+ */
 Message Message::fromByteArray(const QByteArray &rawMsg)
 {
     // the message must at least contain the header
@@ -310,6 +320,12 @@ Message Message::fromByteArray(const QByteArray &rawMsg)
 
 /*! \brief Creates an ACK reply message.
 
+    Use this method to create an ACK reply message from a previously received
+    command message. The \a source and \a destination entries of the original
+    message will be swapped for the resulting message, while the \a snr will
+    remain unchanged. For ACK messages the Message::ReplyFlag and
+    Message::UrgentFlag will be set.
+
     \param errorCode ACK error code; this should be an error code defined
            in the enumeration AckErrorCode.
 
@@ -325,6 +341,23 @@ Message Message::ackMessage(int errorCode) const
 
 /*! \brief Creates a reply message.
 
+    Use this method to create a reply message from a previously received
+    command message (make sure to send an ACK reply first). The \a source
+    and \a destination entries of the original message will be swapped for
+    the resulting message, while the \a snr will remain unchanged. For reply
+    messages the Message::ReplyFlag will be set.
+
+    \param data the data of the reply message. This should be <code>FIN</code>
+           if there is no data to be sent back.
+    \param errorCode the error code of the reply message. If there is no
+           error, \a errorCode should be 0. In case of an error \a errorCode
+           should be a positive number defined by the application and \a data
+           does not need to contain any valid data. If there is a warning that
+           needs to be signalized, \a data must contain a valid set of data
+           and \a errorCode should contain an application-defined negative
+           number.
+
+    \sa ackMessage()
  */
 Message Message::replyMessage(const QByteArray &data, int errorCode) const
 {
