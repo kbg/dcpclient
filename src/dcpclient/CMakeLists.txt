@@ -10,7 +10,7 @@ include_directories(
 
 set(DCPCLIENT_LIB_VERSION ${DCPCLIENT_VERSION_STRING})
 set(DCPCLIENT_LIB_SOVERSION ${DCPCLIENT_VERSION_MAJOR})
-configure_file(version.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/version.h)
+configure_file(version.h.in ${CMAKE_CURRENT_BINARY_DIR}/version.h)
 
 set(libDcpClient_SRCS
     client.cpp
