@@ -95,20 +95,37 @@ Message::Message(const Message &other)
 
 /*! \brief Creates a Dcp::Message object.
 
-    \param flags message flags
     \param snr serial number of the message
     \param source name of the source device
     \param destination name of the destination device
     \param data the message data
+    \param flags message flags (combined DCP and user flags)
 
-    \todo Change the parameter order (flags as last parameter with default
-          value) and add another constructor with separate user/dcp flags.
-
-    \sa flags(), snr(), source(), destination(), data()
+    \sa snr(), source(), destination(), data(), flags()
  */
-Message::Message(quint16 flags, quint32 snr, const QByteArray &source,
-                 const QByteArray &destination, const QByteArray &data)
+Message::Message(quint32 snr, const QByteArray &source,
+                 const QByteArray &destination, const QByteArray &data,
+                 quint16 flags = 0)
     : d(new MessageData(flags, snr, source, destination, data))
+{
+}
+
+/*! \brief Creates a Dcp::Message object.
+
+    \param snr serial number of the message
+    \param source name of the source device
+    \param destination name of the destination device
+    \param data the message data
+    \param dcpFlags DCP flags
+    \param userFlags user flags
+
+    \sa snr(), source(), destination(), data(), dcpFlags(), userFlags
+ */
+Message::Message(quint32 snr, const QByteArray &source,
+                 const QByteArray &destination, const QByteArray &data,
+                 quint8 dcpFlags, quint8 userFlags)
+    : d(new MessageData(quint16(dcpFlags) | (quint16(userFlags) << 8),
+                        snr, source, destination, data))
 {
 }
 
@@ -315,7 +332,7 @@ Message Message::fromByteArray(const QByteArray &rawMsg)
                 MessageDestinationPos, MessageDeviceNameSize);
     QByteArray data = rawMsg.right(dataSize);
 
-    return Message(flags, snr, source, destination, data);
+    return Message(snr, source, destination, data, flags);
 }
 
 /*! \brief Creates an ACK reply message.
@@ -334,9 +351,9 @@ Message Message::fromByteArray(const QByteArray &rawMsg)
 Message Message::ackMessage(int errorCode) const
 {
     return Message(
-        d->flags | ReplyFlag | UrgentFlag,
         d->snr, d->destination, d->source,
-        QByteArray::number(errorCode) + " ACK");
+        QByteArray::number(errorCode) + " ACK",
+        d->flags | ReplyFlag | UrgentFlag);
 }
 
 /*! \brief Creates a reply message.
@@ -362,9 +379,9 @@ Message Message::ackMessage(int errorCode) const
 Message Message::replyMessage(const QByteArray &data, int errorCode) const
 {
     return Message(
-        d->flags | ReplyFlag,
         d->snr, d->destination, d->source,
-        QByteArray::number(errorCode) + " " + (data.isEmpty() ? "FIN" : data));
+        QByteArray::number(errorCode) + " " + (data.isEmpty() ? "FIN" : data),
+        d->flags | ReplyFlag);
 }
 
 } // namespace Dcp

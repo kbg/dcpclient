@@ -272,7 +272,7 @@ void DcpTermWin::messageInputFinished()
         quint32 snr = m_dcp->sendMessage(destination, data).snr();
 
         if (verboseOutput()) {
-            Dcp::Message msg(0, snr, m_dcp->deviceName(), destination, data);
+            Dcp::Message msg(snr, m_dcp->deviceName(), destination, data, 0);
             printLine(formatMessageOutput(msg, false), Qt::blue);
         }
     }
@@ -399,7 +399,7 @@ void DcpTermWin::dcp_messageReceived()
     else
     {
         // handle commands sent to us
-        Dcp::Message outMsg(0, msg.snr(), msg.destination(), msg.source(), "");
+        Dcp::Message outMsg(msg.snr(), msg.destination(), msg.source(), "", 0);
 
         // only "set nop" is a valid command
         if (msg.data().simplified() != "set nop")

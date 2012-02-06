@@ -224,7 +224,7 @@ int main(int argc, char **argv)
         if (!line.isEmpty())
         {
             // Send message to all device in destList
-            Dcp::Message msg(0, 0, opts.deviceName, "", line.toAscii());
+            Dcp::Message msg(0, opts.deviceName, "", line.toAscii(), 0);
             foreach (QByteArray dest, opts.destList)
             {
                 msg.setSnr(++snr);

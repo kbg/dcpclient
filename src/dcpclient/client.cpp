@@ -188,7 +188,7 @@ void ClientPrivate::writeMessageToSocket(const Message &msg)
 
 void ClientPrivate::registerName(const QByteArray &deviceName)
 {
-    Message msg(0, snr, deviceName, QByteArray(), "HELO");
+    Message msg(snr, deviceName, QByteArray(), "HELO", 0);
     incrementSnr();
     writeMessageToSocket(msg);
     socket->flush();
@@ -436,7 +436,7 @@ void Client::setNextSnr(quint32 snr)
 Message Client::sendMessage(const QByteArray &destination,
                             const QByteArray &data, quint16 flags)
 {
-    Message msg(flags, d->snr, d->deviceName, destination, data);
+    Message msg(d->snr, d->deviceName, destination, data, flags);
     d->incrementSnr();
     d->writeMessageToSocket(msg);
     return msg;
@@ -461,9 +461,7 @@ Message Client::sendMessage(const QByteArray &destination,
                             const QByteArray &data, quint8 dcpFlags,
                             quint8 userFlags)
 {
-    Message msg(0, d->snr, d->deviceName, destination, data);
-    msg.setDcpFlags(dcpFlags);
-    msg.setUserFlags(userFlags);
+    Message msg(d->snr, d->deviceName, destination, data, dcpFlags, userFlags);
     d->incrementSnr();
     d->writeMessageToSocket(msg);
     return msg;
@@ -487,7 +485,7 @@ Message Client::sendMessage(const QByteArray &destination,
 Message Client::sendMessage(quint32 snr, const QByteArray &destination,
                             const QByteArray &data, quint16 flags)
 {
-    Message msg(flags, snr, d->deviceName, destination, data);
+    Message msg(snr, d->deviceName, destination, data, flags);
     d->writeMessageToSocket(msg);
     return msg;
 }
@@ -512,9 +510,7 @@ Message Client::sendMessage(quint32 snr, const QByteArray &destination,
                             const QByteArray &data, quint8 dcpFlags,
                             quint8 userFlags)
 {
-    Message msg(0, snr, d->deviceName, destination, data);
-    msg.setDcpFlags(dcpFlags);
-    msg.setUserFlags(userFlags);
+    Message msg(snr, d->deviceName, destination, data, dcpFlags, userFlags);
     d->writeMessageToSocket(msg);
     return msg;
 }

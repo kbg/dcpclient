@@ -52,8 +52,12 @@ public:
 
     Message();
     Message(const Message &other);
-    Message(quint16 flags, quint32 snr, const QByteArray &source,
-            const QByteArray &destination, const QByteArray &data);
+    Message(quint32 snr, const QByteArray &source,
+            const QByteArray &destination, const QByteArray &data,
+            quint16 flags);
+    Message(quint32 snr, const QByteArray &source,
+            const QByteArray &destination, const QByteArray &data,
+            quint8 dcpFlags, quint8 userFlags);
     ~Message();
 
     Message & operator=(const Message &other);
