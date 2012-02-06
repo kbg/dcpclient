@@ -240,11 +240,11 @@ public:
     CommandParserPrivate();
     QByteArray command;
     QByteArray identifier;
-    CommandParser::CommandType commandType;
+    CommandParser::CmdType cmdType;
 };
 
 CommandParserPrivate::CommandParserPrivate()
-    : commandType(CommandParser::SetCommand)
+    : cmdType(CommandParser::SetCmd)
 {
 }
 
@@ -266,7 +266,7 @@ void CommandParser::clear()
     MessageParser::clear();
     d->command = QByteArray();
     d->identifier = QByteArray();
-    d->commandType = SetCommand;
+    d->cmdType = SetCmd;
 }
 
 /*! \brief Parses a command message.
@@ -279,11 +279,11 @@ void CommandParser::clear()
       (<code>"set"</code>, <code>"get"</code>,
        <code>"def"</code>, <code>"undef"</code>),
     an identifier and optional further arguments. The command type can be
-    accessed by using the methods command() or commandType(), the identifier
+    accessed by using the methods command() or cmdType(), the identifier
     by using the method identifier() and the remaining arguments by using the
     method arguments().
 
-    \sa command(), commandType(), identifier(), arguments()
+    \sa command(), cmdType(), identifier(), arguments()
  */
 bool CommandParser::parse(const Message &msg)
 {
@@ -306,13 +306,13 @@ bool CommandParser::parse(const Message &msg)
 
     // parse command type
     if (d->command == "set")
-        d->commandType = SetCommand;
+        d->cmdType = SetCmd;
     else if (d->command == "get")
-        d->commandType = GetCommand;
+        d->cmdType = GetCmd;
     else if (d->command == "def")
-        d->commandType = DefCommand;
+        d->cmdType = DefCmd;
     else if (d->command == "undef")
-        d->commandType = UndefCommand;
+        d->cmdType = UndefCmd;
     else
         return false;
 
@@ -321,10 +321,10 @@ bool CommandParser::parse(const Message &msg)
 
 /*! \brief Returns the command type of the last parsed message as
            enumeration. */
-CommandParser::CommandType CommandParser::commandType() const
+CommandParser::CmdType CommandParser::cmdType() const
 {
     Q_D(const CommandParser);
-    return d->commandType;
+    return d->cmdType;
 }
 
 /*! \brief Returns the command type of the last parsed message as string. */

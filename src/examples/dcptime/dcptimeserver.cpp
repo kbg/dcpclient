@@ -99,9 +99,9 @@ void DcpTimeServer::messageReceived()
     QByteArray identifier = m_parser.identifier();
     static const QList<QByteArray> getters = QList<QByteArray>()
             << "mode" << "time" << "date" << "datetime" << "julian";
-    switch (m_parser.commandType())
+    switch (m_parser.cmdType())
     {
-    case Dcp::CommandParser::GetCommand:
+    case Dcp::CommandParser::GetCmd:
         // check for valid identifier
         if (!getters.contains(identifier)) {
             m_dcp.sendMessage(msg.ackMessage(Dcp::AckUnknownCommandError));
@@ -144,7 +144,7 @@ void DcpTimeServer::messageReceived()
         }
         break;
 
-    case Dcp::CommandParser::SetCommand:
+    case Dcp::CommandParser::SetCmd:
         // only set mode command with one argument
         if (identifier != "mode") {
             m_dcp.sendMessage(msg.ackMessage(Dcp::AckUnknownCommandError));
@@ -159,8 +159,8 @@ void DcpTimeServer::messageReceived()
         }
         break;
 
-    case Dcp::CommandParser::DefCommand:
-    case Dcp::CommandParser::UndefCommand:
+    case Dcp::CommandParser::DefCmd:
+    case Dcp::CommandParser::UndefCmd:
         // there are no supported def or undef commands
         m_dcp.sendMessage(msg.ackMessage(Dcp::AckUnknownCommandError));
         break;

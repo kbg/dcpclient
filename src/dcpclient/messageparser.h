@@ -76,17 +76,17 @@ class CommandParserPrivate;
 class CommandParser : public MessageParser
 {
 public:
-    enum CommandType {
-        SetCommand,
-        GetCommand,
-        DefCommand,
-        UndefCommand
+    enum CmdType {
+        SetCmd,
+        GetCmd,
+        DefCmd,
+        UndefCmd
     };
 
     CommandParser();
     void clear();
     bool parse(const Message &msg);
-    CommandType commandType() const;
+    CmdType cmdType() const;
     QByteArray command() const;
     QByteArray identifier() const;
 
