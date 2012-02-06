@@ -210,7 +210,7 @@ ALIASES                =
 # "class=itcl::class" will allow you to use the command class in the 
 # itcl::class meaning.
 
-TCL_SUBST              = 
+##TCL_SUBST              = 
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C 
 # sources only. Doxygen will then generate output that is more tailored for C. 
@@ -299,7 +299,7 @@ SUBGROUPING            = YES
 # @ingroup) instead of on a separate page (for HTML and Man pages) or 
 # section (for LaTeX and RTF).
 
-INLINE_GROUPED_CLASSES = NO
+##INLINE_GROUPED_CLASSES = NO
 
 # When the INLINE_SIMPLE_STRUCTS tag is set to YES, structs, classes, and 
 # unions with only public data fields will be shown inline in the documentation 
@@ -308,7 +308,7 @@ INLINE_GROUPED_CLASSES = NO
 # structs, classes, and unions are shown on a separate page (for HTML and Man 
 # pages) or section (for LaTeX and RTF).
 
-INLINE_SIMPLE_STRUCTS  = NO
+##INLINE_SIMPLE_STRUCTS  = NO
 
 # When TYPEDEF_HIDES_STRUCT is enabled, a typedef of a struct, union, or enum 
 # is documented as struct, union, or enum with the name of the typedef. So 
@@ -345,7 +345,7 @@ SYMBOL_CACHE_SIZE      = 0
 # formula: 2^(16+LOOKUP_CACHE_SIZE). The valid range is 0..9, the default is 0, 
 # corresponding to a cache size of 2^16 = 65536 symbols.
 
-LOOKUP_CACHE_SIZE      = 0
+##LOOKUP_CACHE_SIZE      = 0
 
 #---------------------------------------------------------------------------
 # Build related configuration options
@@ -595,7 +595,7 @@ LAYOUT_FILE            =
 # of the bibliography can be controlled using LATEX_BIB_STYLE. To use this 
 # feature you need bibtex and perl available in the search path.
 
-CITE_BIB_FILES         = 
+##CITE_BIB_FILES         = 
 
 #---------------------------------------------------------------------------
 # configuration options related to warning and progress messages
@@ -938,7 +938,7 @@ HTML_STYLESHEET        =
 # files. In the HTML_STYLESHEET file, use the file name only. Also note that 
 # the files will be copied as-is; there are no commands or markers available.
 
-HTML_EXTRA_FILES       = 
+##HTML_EXTRA_FILES       = 
 
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output. 
 # Doxygen will adjust the colors in the style sheet and background images 
@@ -1218,7 +1218,7 @@ MATHJAX_RELPATH        = http://www.mathjax.org/mathjax
 # The MATHJAX_EXTENSIONS tag can be used to specify one or MathJax extension 
 # names that should be enabled during MathJax rendering.
 
-MATHJAX_EXTENSIONS     = 
+##MATHJAX_EXTENSIONS     = 
 
 # When the SEARCHENGINE tag is enabled doxygen will generate a search box 
 # for the HTML output. The underlying search engine uses javascript 
@@ -1298,7 +1298,7 @@ LATEX_HEADER           =
 # the last chapter. If it is left blank doxygen will generate a 
 # standard footer. Notice: only use this tag if you know what you are doing!
 
-LATEX_FOOTER           = 
+##LATEX_FOOTER           = 
 
 # If the PDF_HYPERLINKS tag is set to YES, the LaTeX that is generated 
 # is prepared for conversion to pdf (using ps2pdf). The pdf file will 
@@ -1337,7 +1337,7 @@ LATEX_SOURCE_CODE      = NO
 # bibliography, e.g. plainnat, or ieeetr. The default style is "plain". See 
 # http://en.wikipedia.org/wiki/BibTeX for more info.
 
-LATEX_BIB_STYLE        = plain
+##LATEX_BIB_STYLE        = plain
 
 #---------------------------------------------------------------------------
 # configuration options related to the RTF output
@@ -1747,7 +1747,7 @@ DOT_IMAGE_FORMAT       = png
 # need to set HTML_FILE_EXTENSION to xhtml in order to make the SVG files 
 # visible. Older versions of IE do not have SVG support.
 
-INTERACTIVE_SVG        = NO
+##INTERACTIVE_SVG        = NO
 
 # The tag DOT_PATH can be used to specify the path where the dot tool can be 
 # found. If left blank, it is assumed the dot tool can be found in the path.
