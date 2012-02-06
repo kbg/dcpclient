@@ -446,8 +446,8 @@ Message Client::sendMessage(const QByteArray &destination,
 
     \param destination the name of the destination device
     \param data the message data
-    \param userFlags the user flags of the message
     \param dcpFlags the DCP flags of the message
+    \param userFlags the user flags of the message
     \returns the resulting Message object, which is sent to the DCP server
 
     This method creates a new Message object and sends it to the DCP server.
@@ -456,12 +456,10 @@ Message Client::sendMessage(const QByteArray &destination,
     message is set to the client's deviceName().
 
     \sa nextSnr(), setNextSnr(), deviceName()
-
-    \todo Swap order of userFlags and dcpFlags
  */
 Message Client::sendMessage(const QByteArray &destination,
-                            const QByteArray &data, quint8 userFlags,
-                            quint8 dcpFlags)
+                            const QByteArray &data, quint8 dcpFlags,
+                            quint8 userFlags)
 {
     Message msg(0, d->snr, d->deviceName, destination, data);
     msg.setDcpFlags(dcpFlags);
@@ -499,8 +497,8 @@ Message Client::sendMessage(quint32 snr, const QByteArray &destination,
     \param snr the serial number of the message
     \param destination the name of the destination device
     \param data the message data
-    \param userFlags the user flags of the message
     \param dcpFlags the DCP flags of the message
+    \param userFlags the user flags of the message
     \returns the resulting Message object, which is sent to the DCP server
 
     This method creates a new Message object and sends it to the DCP server.
@@ -509,12 +507,10 @@ Message Client::sendMessage(quint32 snr, const QByteArray &destination,
     message is set to the client's deviceName().
 
     \sa deviceName()
-
-    \todo Swap order of userFlags and dcpFlags
  */
 Message Client::sendMessage(quint32 snr, const QByteArray &destination,
-                            const QByteArray &data, quint8 userFlags,
-                            quint8 dcpFlags)
+                            const QByteArray &data, quint8 dcpFlags,
+                            quint8 userFlags)
 {
     Message msg(0, snr, d->deviceName, destination, data);
     msg.setDcpFlags(dcpFlags);

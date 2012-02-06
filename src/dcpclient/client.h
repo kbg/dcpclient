@@ -75,12 +75,12 @@ public:
     Message sendMessage(const QByteArray &destination, const QByteArray &data,
                         quint16 flags = 0);
     Message sendMessage(const QByteArray &destination, const QByteArray &data,
-                        quint8 userFlags, quint8 dcpFlags);
+                        quint8 dcpFlags, quint8 userFlags);
     Message sendMessage(quint32 snr, const QByteArray &destination,
                         const QByteArray &data, quint16 flags = 0);
     Message sendMessage(quint32 snr, const QByteArray &destination,
-                        const QByteArray &data, quint8 userFlags,
-                        quint8 dcpFlags);
+                        const QByteArray &data, quint8 dcpFlags,
+                        quint8 userFlags);
     void sendMessage(const Message &message);
 
     int messagesAvailable() const;
