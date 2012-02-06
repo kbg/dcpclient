@@ -1,4 +1,4 @@
-find_package(Doxygen)
+find_package(Doxygen QUIET)
 
 if(DOXYGEN_FOUND)
     set(DOXYGEN_OUTPUT_DIR ${CMAKE_BINARY_DIR}/doc)
@@ -18,12 +18,13 @@ if(DOXYGEN_FOUND)
         ADDITIONAL_MAKE_CLEAN_FILES ${DOXYGEN_OUTPUT_DIR}/html)
 
     if(BUILD_DOCUMENTATION)
-        add_custom_target(doc ALL DEPENDS doxygen)
+        add_custom_target(doc ALL)
         install(DIRECTORY ${DOXYGEN_OUTPUT_DIR}/html
                 DESTINATION share/doc/dcpclient)
     else()
-        add_custom_target(doc DEPENDS doxygen)
+        add_custom_target(doc)
     endif()
+    add_dependencies(doc doxygen)
 else()
     if(BUILD_DOCUMENTATION)
         message("Doxygen not found, cannot generate documentation.")
