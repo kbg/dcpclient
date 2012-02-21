@@ -7,10 +7,10 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-set(dcpterm_SRCS dcpterm.cpp dcptermwin.cpp)
+set(dcpterm_SRCS dcpterm.cpp dcptermwin.cpp configdialog.cpp)
 qt4_automoc(${dcpterm_SRCS})
-qt4_wrap_cpp(dcpterm_MOC_SRCS dcptermwin.h)
-qt4_wrap_ui(dcpterm_UI_HDRS dcptermwin.ui)
+qt4_wrap_cpp(dcpterm_MOC_SRCS dcptermwin.h configdialog.h)
+qt4_wrap_ui(dcpterm_UI_HDRS dcptermwin.ui configdialog.ui)
 
 add_executable(dcpterm ${dcpterm_SRCS} ${dcpterm_MOC_SRCS} ${dcpterm_UI_HDRS})
 target_link_libraries(dcpterm DcpClient

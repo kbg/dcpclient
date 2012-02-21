@@ -123,6 +123,7 @@
     </property>
     <addaction name="actionConnect"/>
     <addaction name="actionAutoReconnect"/>
+    <addaction name="actionSettings"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuConnection"/>
@@ -134,7 +135,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Connect</string>
+    <string>&amp;Connect</string>
    </property>
    <property name="toolTip">
     <string>Connect to DCP server</string>
@@ -167,7 +168,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Auto Reconnect</string>
+    <string>Auto &amp;Reconnect</string>
    </property>
    <property name="toolTip">
     <string>Reconnect automatically</string>
@@ -206,6 +207,11 @@
    </property>
    <property name="toolTip">
     <string>Clear the entered messages</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>&amp;Settings</string>
    </property>
   </action>
  </widget>

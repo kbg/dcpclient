@@ -25,6 +25,7 @@
 
 #include "dcptermwin.h"
 #include "ui_dcptermwin.h"
+#include "configdialog.h"
 #include <dcpclient/message.h>
 #include <QtCore/QtDebug>
 #include <QtGui/QtGui>
@@ -476,4 +477,23 @@ void DcpTermWin::on_comboMessage_customContextMenuRequested(const QPoint &pos)
     menu->addAction(ui->actionClearMessageHistory);
     menu->exec(ui->comboMessage->lineEdit()->mapToGlobal(pos));
     delete menu;
+}
+
+void DcpTermWin::on_actionSettings_triggered()
+{
+    ConfigDialog dlg;
+    dlg.setServerName(m_serverName);
+    dlg.setServerPort(m_serverPort);
+    dlg.setDeviceName(m_deviceName);
+
+    if (dlg.exec() != QDialog::Accepted)
+        return;
+
+    m_serverName = dlg.serverName();
+    m_serverPort = dlg.serverPort();
+    m_deviceName = dlg.deviceName();
+
+    m_dcp->disconnectFromServer();
+    if (m_dcp->waitForDisconnected())
+        m_dcp->connectToServer(m_serverName, m_serverPort, m_deviceName);
 }
