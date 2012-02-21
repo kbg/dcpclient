@@ -74,6 +74,9 @@
         <property name="maxCount">
          <number>1000</number>
         </property>
+        <property name="sizeAdjustPolicy">
+         <enum>QComboBox::AdjustToMinimumContentsLengthWithIcon</enum>
+        </property>
         <property name="duplicatesEnabled">
          <bool>true</bool>
         </property>
