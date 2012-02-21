@@ -76,7 +76,7 @@ public:
     explicit ClientPrivate(Client *qq);
     virtual ~ClientPrivate();
 
-    void readMessageFromSocket();
+    bool readNextMessageFromSocket();
     void writeMessageToSocket(const Message &msg);
     void registerName(const QByteArray &deviceName);
     void incrementSnr() {
@@ -124,10 +124,10 @@ ClientPrivate::~ClientPrivate()
     delete reconnectTimer;
 }
 
-void ClientPrivate::readMessageFromSocket()
+bool ClientPrivate::readNextMessageFromSocket()
 {
     if (socket->bytesAvailable() < FullHeaderSize)
-        return;
+        return false;
 
     char pkgHeader[PacketHeaderSize];
     const quint32 *pMsgSize = reinterpret_cast<const quint32 *>(
@@ -141,7 +141,7 @@ void ClientPrivate::readMessageFromSocket()
 
     // not enough data (header + message)
     if (socket->bytesAvailable() < FullHeaderSize + msgSize)
-        return;
+        return false;
 
     // remove packet header from the input buffer
     socket->read(pkgHeader, PacketHeaderSize);
@@ -158,6 +158,8 @@ void ClientPrivate::readMessageFromSocket()
         inQueue.enqueue(Message::fromByteArray(rawMsg));
         emit q->messageReceived();
     }
+
+    return true;
 }
 
 void ClientPrivate::writeMessageToSocket(const Message &msg)
@@ -287,9 +289,9 @@ void ClientPrivate::_k_readMessagesFromSocket()
 {
     //qDebug() << "ClientPrivate::_k_readMessagesFromSocket";
 
-    // stop if not enough header data is available
-    while (socket->bytesAvailable() >= FullHeaderSize)
-        readMessageFromSocket();  // emits messageReceived()
+    // try to read as many messages as possible and stop if the next message
+    // cannot be read; emits a messageReceived signal for each message.
+    while (readNextMessageFromSocket()) {}
 }
 
 void ClientPrivate::_k_autoReconnectTimeout()
