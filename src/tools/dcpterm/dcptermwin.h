@@ -32,13 +32,14 @@
 class QColor;
 class QLabel;
 namespace Ui { class DcpTermWin; }
+class CmdLineOptions;
 
 class DcpTermWin : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit DcpTermWin(QWidget *parent = 0);
+    explicit DcpTermWin(const CmdLineOptions &opts, QWidget *parent = 0);
     ~DcpTermWin();
 
 protected:

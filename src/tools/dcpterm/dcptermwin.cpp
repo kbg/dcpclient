@@ -26,6 +26,7 @@
 #include "dcptermwin.h"
 #include "ui_dcptermwin.h"
 #include "configdialog.h"
+#include "cmdlineoptions.h"
 #include <dcpclient/message.h>
 #include <QtCore/QtDebug>
 #include <QtGui/QtGui>
@@ -60,10 +61,11 @@ inline static QString formatMessageOutput(const Dcp::Message &msg, bool incoming
     return result;
 }
 
-DcpTermWin::DcpTermWin(QWidget *parent)
+DcpTermWin::DcpTermWin(const CmdLineOptions &opts, QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::DcpTermWin),
       m_dcp(new Dcp::Client),
+      m_serverPort(0),
       m_connectionStatusLabel(new QLabel)
 {
     ui->setupUi(this);
@@ -84,8 +86,27 @@ DcpTermWin::DcpTermWin(QWidget *parent)
                    SLOT(dcp_error(Dcp::Client::Error)));
     connect(m_dcp, SIGNAL(messageReceived()), SLOT(dcp_messageReceived()));
 
-    // load settings and try to connect
+    // load settings from ini file
     loadSettings();
+
+    // overwrite settings by command line options
+    if (!opts.serverName.isEmpty())
+        m_serverName = opts.serverName;
+    if (opts.serverPort != 0)
+        m_serverPort = opts.serverPort;
+    if (!opts.deviceName.isEmpty())
+        m_deviceName = opts.deviceName;
+    if (!opts.destDeviceName.isEmpty()) {
+        QString currentDeviceName = opts.destDeviceName;
+        int idx = ui->comboDevice->findText(currentDeviceName);
+        if (idx == -1) {
+            ui->comboDevice->addItem(currentDeviceName);
+            idx = ui->comboDevice->findText(currentDeviceName);
+        }
+        ui->comboDevice->setCurrentIndex(idx);
+    }
+
+    // try to connect
     QTimer::singleShot(0, ui->actionConnect, SLOT(trigger()));
 }
 
@@ -147,13 +168,11 @@ void DcpTermWin::loadSettings()
     QString currentDeviceName = settings.value("CurrentDeviceName").toString();
     if (!currentDeviceName.isEmpty()) {
         int idx = ui->comboDevice->findText(currentDeviceName);
-        if (idx != -1)
-            ui->comboDevice->setCurrentIndex(idx);
-        else {
+        if (idx == -1) {
             ui->comboDevice->addItem(currentDeviceName);
-            ui->comboDevice->setCurrentIndex(
-                    ui->comboDevice->findText(currentDeviceName));
+            idx = ui->comboDevice->findText(currentDeviceName);
         }
+        ui->comboDevice->setCurrentIndex(idx);
     }
     settings.endGroup();
 

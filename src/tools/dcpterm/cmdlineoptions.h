@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Kolja Glogowski
+ * Copyright (c) 2012 Kolja Glogowski
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -23,22 +23,33 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "dcptermwin.h"
-#include "cmdlineoptions.h"
-#include <QtGui/QApplication>
-#include <QtCore/QFileInfo>
+#ifndef CMDLINEOPTIONS_H
+#define CMDLINEOPTIONS_H
 
-int main(int argc, char **argv)
+#include <QtCore/QString>
+#include <QtCore/QByteArray>
+#include <QtCore/QTextStream>
+
+class CmdLineOptions
 {
-    QApplication app(argc, argv);
-    app.setApplicationName(QFileInfo(app.arguments()[0]).fileName());
+    QTextStream cout;
+    QTextStream cerr;
 
-    CmdLineOptions opts;
-    if (!opts.parse()) return 1;
-    else if (opts.help) return 0;
+public:
+    CmdLineOptions();
+    bool parse();
+    void printHelp();
 
-    DcpTermWin win(opts);
-    win.show();
+protected:
+    void printReqArg(const QString &optionName);
+    QString moreInfo();
 
-    return app.exec();
-}
+public:
+    QString serverName;
+    quint16 serverPort;
+    QByteArray deviceName;
+    QByteArray destDeviceName;
+    bool help;
+};
+
+#endif // CMDLINEOPTIONS_H
