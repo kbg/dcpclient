@@ -4,8 +4,15 @@ include_directories(
     ${QT_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR}/src
     ${CMAKE_CURRENT_BINARY_DIR}
 )
+
+set(DCPTERM_VERSION_MAJOR 0)
+set(DCPTERM_VERSION_MINOR 1)
+set(DCPTERM_VERSION_RELEASE 0)
+set(DCPTERM_VERSION_STRING "${DCPTERM_VERSION_MAJOR}.${DCPTERM_VERSION_MINOR}.${DCPTERM_VERSION_RELEASE}")
+configure_file(version.h.in ${CMAKE_CURRENT_BINARY_DIR}/version.h)
 
 set(dcpterm_SRCS dcpterm.cpp dcptermwin.cpp configdialog.cpp cmdlineoptions.cpp)
 qt4_automoc(${dcpterm_SRCS})

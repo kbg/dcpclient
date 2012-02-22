@@ -67,6 +67,7 @@ private slots:
     void on_comboDevice_customContextMenuRequested(const QPoint &pos);
     void on_comboMessage_customContextMenuRequested(const QPoint &pos);
     void on_actionSettings_triggered();
+    void on_actionAbout_triggered();
 
 private:
     Ui::DcpTermWin *ui;

@@ -27,6 +27,8 @@
 #include "ui_dcptermwin.h"
 #include "configdialog.h"
 #include "cmdlineoptions.h"
+#include "version.h"
+#include <dcpclient/version.h>
 #include <dcpclient/message.h>
 #include <QtCore/QtDebug>
 #include <QtGui/QtGui>
@@ -500,7 +502,7 @@ void DcpTermWin::on_comboMessage_customContextMenuRequested(const QPoint &pos)
 
 void DcpTermWin::on_actionSettings_triggered()
 {
-    ConfigDialog dlg;
+    ConfigDialog dlg(this);
     dlg.setServerName(m_serverName);
     dlg.setServerPort(m_serverPort);
     dlg.setDeviceName(m_deviceName);
@@ -515,4 +517,22 @@ void DcpTermWin::on_actionSettings_triggered()
     m_dcp->disconnectFromServer();
     if (m_dcp->waitForDisconnected())
         m_dcp->connectToServer(m_serverName, m_serverPort, m_deviceName);
+}
+
+void DcpTermWin::on_actionAbout_triggered()
+{
+    QString aboutText = tr(
+                "<h2>DcpTerm %1</h2>" \
+                "<p><b>Library Versions:</b><br>" \
+                "&nbsp;&nbsp;DcpClient %2<br>" \
+                "&nbsp;&nbsp;Qt %3</p>" \
+                "<p>%4<br>%5</p>"
+            )
+            .arg(DCPTERM_VERSION_STRING)
+            .arg(Dcp::versionString())
+            .arg(qVersion())
+            .arg(tr("Copyright (c) 2012 Kolja Glogowski"))
+            .arg(tr("Kiepenheuer-Institut f&uuml;r Sonnenphysik"));
+
+    QMessageBox::about(this, tr("About DcpTerm"), aboutText);
 }
