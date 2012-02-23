@@ -137,6 +137,47 @@ QList<QByteArray> MessageParser::arguments() const
     return d->args;
 }
 
+/*! \brief Returns the message arguments as a QByteArray by joining the
+           arguments() list using a single space character.
+
+    \sa arguments()
+ */
+QByteArray MessageParser::joinedArguments() const
+{
+    Q_D(const MessageParser);
+    if (d->args.isEmpty())
+        return QByteArray();
+    QByteArray result = d->args.first();
+    QList<QByteArray>::ConstIterator it = d->args.constBegin() + 1;
+    for (; it != d->args.end(); ++it) {
+        result.append(' ');
+        result.append(*it);
+    }
+    return result;
+}
+
+/*! \brief Returns true if the arguments() list is not empty; otherwise
+           returns false.
+
+    \sa arguments()
+ */
+bool MessageParser::hasArguments() const
+{
+    Q_D(const MessageParser);
+    return !d->args.isEmpty();
+}
+
+/*! \brief Returns the number of elements in the arguments() list.
+
+    \sa arguments()
+ */
+int MessageParser::numArguments() const
+{
+    Q_D(const MessageParser);
+    return d->args.size();
+}
+
+
 // --------------------------------------------------------------------------
 
 class ReplyParserPrivate : public MessageParserPrivate

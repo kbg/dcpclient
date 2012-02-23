@@ -43,7 +43,10 @@ public:
     virtual ~MessageParser();
     virtual void clear();
     virtual bool parse(const Message &msg);
-    virtual QList<QByteArray> arguments() const;
+    QList<QByteArray> arguments() const;
+    QByteArray joinedArguments() const;
+    bool hasArguments() const;
+    int numArguments() const;
 
 protected:
     MessageParserPrivate * const d_ptr;
