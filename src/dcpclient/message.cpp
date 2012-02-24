@@ -28,6 +28,7 @@
 #include <QtCore/QSharedData>
 #include <QtCore/QtEndian>
 #include <QtCore/QtAlgorithms>
+#include <QtCore/QString>
 
 namespace Dcp {
 
@@ -35,6 +36,23 @@ namespace Dcp {
     \brief DCP message class.
  */
 
+/*! \brief Returns a string describing the given AckErrorCode. */
+QString ackErrorString(int errorCode)
+{
+    switch (errorCode)
+    {
+    case Dcp::AckNoError:
+        return QString("No Error");
+    case Dcp::AckUnknownCommandError:
+        return QString("Unknown Command");
+    case Dcp::AckParameterError:
+        return QString("Parameter Error");
+    case Dcp::AckWrongModeError:
+        return QString("Wrong Mode");
+    default:
+        return QString("Unknown Error");
+    }
+}
 
 /*! \internal
     \brief Implicitly shared message data.

@@ -38,6 +38,8 @@ enum AckErrorCode {
     AckWrongModeError = 5
 };
 
+QString ackErrorString(int errorCode);
+
 class MessageData;
 class Message
 {
