@@ -253,6 +253,13 @@ bool DcpTermWin::verboseOutput() const
     return ui->actionVerboseOutput->isChecked();
 }
 
+void DcpTermWin::sendMessage(const Dcp::Message &msg)
+{
+    m_dcp->sendMessage(msg);
+    if (verboseOutput())
+        printLine(formatMessageOutput(msg, false), Qt::blue);
+}
+
 void DcpTermWin::printError(const QString &errorText)
 {
     printLine(tr("Error: %1.").arg(errorText), Qt::red);
@@ -291,12 +298,9 @@ void DcpTermWin::messageInputFinished()
     if (!messageText.isEmpty()) {
         QByteArray destination = ui->comboDevice->currentText().toAscii();
         QByteArray data = messageText.toAscii();
-        quint32 snr = m_dcp->sendMessage(destination, data).snr();
-
-        if (verboseOutput()) {
-            Dcp::Message msg(snr, m_dcp->deviceName(), destination, data, 0);
+        Dcp::Message msg = m_dcp->sendMessage(destination, data);
+        if (verboseOutput())
             printLine(formatMessageOutput(msg, false), Qt::blue);
-        }
     }
 }
 
@@ -380,75 +384,69 @@ void DcpTermWin::dcp_messageReceived()
 
     if (msg.isReply())
     {
-        QByteArray data = msg.data().simplified();
-
-        // handle replies
-        if (data.isEmpty())
-            printLine(tr("Invalid reply message"), Qt::red);
-        else if (data == "0 ACK")
-            ; // do nothing
-        else if (data == "2 ACK")
-            printLine(tr("Unknown command"), Qt::red);
-        else if (data == "3 ACK")
-            printLine(tr("Parameter error"), Qt::red);
-        else if (data == "5 ACK")
-            printLine(tr("Wrong mode"), Qt::red);
-        else
-        {
-            QStringList args = QString(data).split(" ");
-
-            bool ok;
-            int errcode = args.takeFirst().toInt(&ok);
-
-            if (!ok)
-                printLine(tr("Invalid error code in reply message"));
-            else if (errcode > 0)
-                printLine(tr("Command failed, errcode: %1").arg(errcode),
-                          Qt::red);
-            else if (errcode < 0) {
-                printLine(tr("Command returned with warning, errorcode %1")
-                          .arg(errcode), Qt::red);
-                printLine(args.join(" "));
-            }
-            else {
-                if (args.count() == 1 && args[0] == "FIN")
-                    printLine("OK");
-                else
-                    printLine(args.join(" "));
-            }
+        // handle reply messages sent to us
+        if (!m_reply.parse(msg)) {
+            printLine(tr("Received invalid reply message"), Qt::red);
+            return;
         }
+
+        int errorCode = m_reply.errorCode();
+
+        // not much to do for ACK replies, just print an error message (if
+        // neccessary) and leave
+        if (m_reply.isAckReply()) {
+            if (errorCode != Dcp::AckNoError)
+                printLine(Dcp::ackErrorString(errorCode), Qt::red);
+            return;
+        }
+
+        // for regular replies, there is not much to do, if an error occurs
+        if (errorCode > 0) {
+            printLine(tr("Command failed, errcode: %1").arg(errorCode),
+                      Qt::red);
+            return;
+        }
+
+        // don't return for warnings, the message data is valid
+        if (errorCode < 0)
+            printLine(tr("Command returned with warning, errcode %1")
+                      .arg(errorCode), Qt::red);
+
+        // print the reply data, or OK for a FIN or an empty message
+        if ((m_reply.numArguments() == 1 && m_reply.arguments()[0] == "FIN") ||
+                !m_reply.hasArguments())
+            printLine("OK");
+        else
+            printLine(m_reply.joinedArguments());
     }
     else
     {
-        // handle commands sent to us
-        Dcp::Message outMsg(msg.snr(), msg.destination(), msg.source(), "", 0);
+        // handle command messages sent to us
+        if (!m_command.parse(msg)) {
+            sendMessage(msg.ackMessage(Dcp::AckUnknownCommandError));
+            return;
+        }
 
-        // only "set nop" is a valid command
-        if (msg.data().simplified() != "set nop")
+        if (m_command.cmdType() == Dcp::CommandParser::SetCmd &&
+            m_command.identifier() == "nop")
         {
-            outMsg.setFlags(Dcp::Message::AckFlags);
-            outMsg.setData("2 ACK");
-            m_dcp->sendMessage(outMsg);
-
-            if (verboseOutput())
-                printLine(formatMessageOutput(outMsg, false), Qt::blue);
+            // command: set nop
+            if (m_command.hasArguments())
+                sendMessage(msg.ackMessage(Dcp::AckParameterError));
+            else {
+                sendMessage(msg.ackMessage());
+                sendMessage(msg.replyMessage("FIN"));
+            }
+        }
+        else if (m_command.cmdType() == Dcp::CommandParser::GetCmd &&
+                 m_command.identifier() == "echo")
+        {
+            // command: get echo [args]
+            sendMessage(msg.ackMessage());
+            sendMessage(msg.replyMessage(m_command.joinedArguments()));
         }
         else
-        {
-            outMsg.setFlags(Dcp::Message::AckFlags);
-            outMsg.setData("0 ACK");
-            m_dcp->sendMessage(outMsg);
-
-            if (verboseOutput())
-                printLine(formatMessageOutput(outMsg, false), Qt::blue);
-
-            outMsg.setFlags(Dcp::Message::ReplyFlag);
-            outMsg.setData("0 FIN");
-            m_dcp->sendMessage(outMsg);
-
-            if (verboseOutput())
-                printLine(formatMessageOutput(outMsg, false), Qt::blue);
-        }
+            sendMessage(msg.ackMessage(Dcp::AckUnknownCommandError));
     }
 }
 

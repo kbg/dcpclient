@@ -27,6 +27,7 @@
 #define DCPTERMWIN_H
 
 #include <dcpclient/client.h>
+#include <dcpclient/messageparser.h>
 #include <QtGui/QMainWindow>
 
 class QColor;
@@ -47,6 +48,7 @@ protected:
     void saveSettings();
     void closeEvent(QCloseEvent *event);
     bool verboseOutput() const;
+    void sendMessage(const Dcp::Message &msg);
 
 protected slots:
     void printError(const QString &errorText);
@@ -72,6 +74,8 @@ private slots:
 private:
     Ui::DcpTermWin *ui;
     Dcp::Client *m_dcp;
+    Dcp::CommandParser m_command;
+    Dcp::ReplyParser m_reply;
     QByteArray m_deviceName;
     QString m_serverName;
     quint16 m_serverPort;
