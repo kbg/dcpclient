@@ -260,14 +260,16 @@ void ClientPrivate::_k_connected()
 {
     //qDebug() << "ClientPrivate::_k_connected";
 
-    // register device name and reemit signal
-    registerName(deviceName);
     emit q->connected();
 }
 
 void ClientPrivate::_k_socketStateChanged(QAbstractSocket::SocketState state)
 {
     //qDebug() << "ClientPrivate::_k_socketStateChanged:" << state;
+
+    // register device name, when connected
+    if (state == QAbstractSocket::ConnectedState)
+        registerName(deviceName);
 
     if (autoReconnect && connectionRequested
                       && state == QAbstractSocket::UnconnectedState)
