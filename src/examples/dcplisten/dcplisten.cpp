@@ -28,19 +28,6 @@
 #include <QtCore/QtCore>
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);
-static QTextStream & operator << (QTextStream &os, const Dcp::Message &msg) {
-    return os
-        << ((msg.flags() & Dcp::Message::PaceFlag) != 0 ? "p" : "-")
-        << ((msg.flags() & Dcp::Message::GrecoFlag) != 0 ? "g" : "-")
-        << (msg.isUrgent() ? "u" : "-")
-        << (msg.isReply() ? "r" : "-")
-        << hex << " [0x" << msg.flags() << dec << "] "
-        << "#" << msg.snr() << " "
-        << msg.source() << " -> "
-        << msg.destination() << " "
-        << "[" << msg.data().size() << "] "
-        << msg.data();
-}
 
 int main(int argc, char **argv)
 {

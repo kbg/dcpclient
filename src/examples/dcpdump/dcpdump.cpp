@@ -97,15 +97,5 @@ void DcpDump::messageReceived()
         m_dcp.sendMessage(msg);
     }
 
-    cout << ((msg.flags() & Dcp::Message::PaceFlag) != 0 ? "p" : "-")
-         << ((msg.flags() & Dcp::Message::GrecoFlag) != 0 ? "g" : "-")
-         << (msg.isUrgent() ? "u" : "-")
-         << (msg.isReply() ? "r" : "-")
-         << hex << " [0x" << msg.flags() << dec << "] "
-         << "#" << msg.snr() << " "
-         << (m_deviceMap.contains(source) ? (source + " -> ") : "")
-         << msg.source() << " -> "
-         << msg.destination() << " "
-         << "[" << msg.data().size() << "] "
-         << msg.data() << endl;
+    cout << msg << endl;
 }
