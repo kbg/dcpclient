@@ -95,7 +95,8 @@ public:
     static Message fromByteArray(const QByteArray &rawMsg);
 
     Message ackMessage(int errorCode = AckNoError) const;
-    Message replyMessage(const QByteArray &data, int errorCode = 0) const;
+    Message replyMessage(const QByteArray &data = QByteArray(),
+                         int errorCode = 0) const;
 
 private:
     QSharedDataPointer<MessageData> d;
