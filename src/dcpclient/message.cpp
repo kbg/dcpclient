@@ -29,6 +29,7 @@
 #include <QtCore/QtEndian>
 #include <QtCore/QtAlgorithms>
 #include <QtCore/QString>
+#include <QtCore/QDebug>
 
 namespace Dcp {
 
@@ -400,6 +401,68 @@ Message Message::replyMessage(const QByteArray &data, int errorCode) const
         d->snr, d->destination, d->source,
         QByteArray::number(errorCode) + " " + (data.isEmpty() ? "FIN" : data),
         d->flags | ReplyFlag);
+}
+
+/*! \brief QTextStream output operator for Dcp::Message objects.
+
+    This output operator can be used to print a human-readable representation
+    of a message object to a QTextStream.
+
+    <b>Example:</b>
+    \code
+    #include <QtCore/QTextStream>
+    QTextStream cout(stdout, QIODevice::WriteOnly);
+    ...
+    Dcp::Message msg(1, "src", "dst", "dat", 0);
+    cout << msg << endl;
+    \endcode
+
+    \sa operator<<(QDebug debug, const Dcp::Message &msg)
+ */
+QTextStream & operator << (QTextStream &os, const Dcp::Message &msg)
+{
+    return os
+        << ((msg.flags() & Dcp::Message::PaceFlag) != 0 ? "p" : "-")
+        << ((msg.flags() & Dcp::Message::GrecoFlag) != 0 ? "g" : "-")
+        << (msg.isUrgent() ? "u" : "-")
+        << (msg.isReply() ? "r" : "-")
+        << hex << " [0x" << msg.flags() << dec << "] "
+        << "#" << msg.snr() << " "
+        << "\"" << msg.source() << "\" -> "
+        << "\"" << msg.destination() << "\" "
+        << "[" << msg.data().size() << "] "
+        << "\"" << msg.data() << "\"";
+}
+
+/*! \brief QDebug output operator for Dcp::Message objects.
+
+    This output operator can be used to print a human-readable representation
+    of a message object to the qDebug() stream.
+
+    <b>Example:</b>
+    \code
+    #include <QtCore/QtDebug>
+    ...
+    Dcp::Message msg(1, "src", "dst", "dat", 0);
+    qDebug() << msg;
+    \endcode
+
+    \sa operator<<(QTextStream &os, const Dcp::Message &msg)
+ */
+QDebug operator << (QDebug debug, const Dcp::Message &msg)
+{
+    debug.nospace()
+        << ((msg.flags() & Dcp::Message::PaceFlag) != 0 ? "p" : "-")
+        << ((msg.flags() & Dcp::Message::GrecoFlag) != 0 ? "g" : "-")
+        << (msg.isUrgent() ? "u" : "-")
+        << (msg.isReply() ? "r" : "-")
+        << hex << " [0x" << msg.flags() << dec << "] "
+        << "#" << msg.snr() << " "
+        << msg.source() << " -> "
+        << msg.destination() << " "
+        << "[" << msg.data().size() << "] "
+        << msg.data();
+    return debug.space();
 }
 
 } // namespace Dcp

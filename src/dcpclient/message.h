@@ -29,6 +29,10 @@
 #include <QtCore/QByteArray>
 #include <QtCore/QSharedDataPointer>
 
+class QString;
+class QTextStream;
+class QDebug;
+
 namespace Dcp {
 
 enum AckErrorCode {
@@ -101,6 +105,10 @@ public:
 private:
     QSharedDataPointer<MessageData> d;
 };
+
+QTextStream & operator << (QTextStream &os, const Dcp::Message &msg);
+QDebug operator << (QDebug debug, const Dcp::Message &msg);
+
 
 } // namespace Dcp
 
