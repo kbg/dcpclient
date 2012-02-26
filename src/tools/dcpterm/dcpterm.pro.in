@@ -7,6 +7,6 @@ DEPENDPATH += .
 INCLUDEPATH += . ${CMAKE_INSTALL_PREFIX}/include
 LIBS += -L${CMAKE_INSTALL_PREFIX}/lib -lDcpClient -Wl,-rpath,${CMAKE_INSTALL_PREFIX}/lib
 
-HEADERS += dcptermwin.h
-FORMS += dcptermwin.ui
-SOURCES += dcpterm.cpp dcptermwin.cpp
+HEADERS += dcptermwin.h configdialog.h cmdlineoptions.h version.h
+FORMS += dcptermwin.ui configdialog.ui
+SOURCES += dcpterm.cpp dcptermwin.cpp configdialog.cpp cmdlineoptions.cpp

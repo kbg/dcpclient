@@ -19,6 +19,12 @@ if(INSTALL_EXAMPLE_SOURCES)
                   dcpterm/dcptermwin.h
                   dcpterm/dcptermwin.cpp
                   dcpterm/dcptermwin.ui
+                  dcpterm/configdialog.h
+                  dcpterm/configdialog.cpp
+                  dcpterm/configdialog.ui
+                  dcpterm/cmdlineoptions.h
+                  dcpterm/cmdlineoptions.cpp
+                  ${CMAKE_CURRENT_BINARY_DIR}/dcpterm/version.h
                   ${CMAKE_CURRENT_BINARY_DIR}/dcpterm.pro
             DESTINATION share/doc/dcpclient/examples/dcpterm)
 endif()
