@@ -253,8 +253,9 @@ void DcpTermWin::printLine(const QString &text, const QColor &color)
 {
     QTextCharFormat charFormat = ui->textOutput->currentCharFormat();
     charFormat.setForeground(color);
-    ui->textOutput->setCurrentCharFormat(charFormat);
-    ui->textOutput->appendPlainText(text);
+    QTextCursor cursor = ui->textOutput->textCursor();
+    cursor.movePosition(QTextCursor::End);
+    cursor.insertText(text + "\n", charFormat);
 }
 
 void DcpTermWin::messageInputFinished()
