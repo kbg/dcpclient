@@ -251,11 +251,19 @@ void DcpTermWin::printError(const QString &errorText)
 
 void DcpTermWin::printLine(const QString &text, const QColor &color)
 {
+    QScrollBar *scrollBar = ui->textOutput->verticalScrollBar();
+    bool needToScroll = (scrollBar->value() == scrollBar->maximum());
+
     QTextCharFormat charFormat = ui->textOutput->currentCharFormat();
     charFormat.setForeground(color);
     QTextCursor cursor = ui->textOutput->textCursor();
     cursor.movePosition(QTextCursor::End);
-    cursor.insertText(text + "\n", charFormat);
+    if (cursor.position() != 0)
+        cursor.insertText("\n", charFormat);
+    cursor.insertText(text, charFormat);
+
+    if (needToScroll)
+        scrollBar->setValue(scrollBar->maximum());
 }
 
 void DcpTermWin::messageInputFinished()
