@@ -104,7 +104,7 @@ DcpTermWin::~DcpTermWin()
 void DcpTermWin::loadSettings()
 {
     QSettings settings(QSettings::IniFormat, QSettings::UserScope,
-                       "diib.de", "dcpterm");
+                       "Kis", "dcpterm");
 
     bool ok;
 
@@ -188,7 +188,7 @@ void DcpTermWin::loadSettings()
 void DcpTermWin::saveSettings()
 {
     QSettings settings(QSettings::IniFormat, QSettings::UserScope,
-                       "diib.de", "dcpterm");
+                       "Kis", "dcpterm");
 
     // server settings and device name
     settings.beginGroup("Server");
