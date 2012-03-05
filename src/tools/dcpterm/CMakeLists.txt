@@ -8,12 +8,6 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-set(DCPTERM_VERSION_MAJOR 1)
-set(DCPTERM_VERSION_MINOR 0)
-set(DCPTERM_VERSION_RELEASE 0)
-set(DCPTERM_VERSION_STRING "${DCPTERM_VERSION_MAJOR}.${DCPTERM_VERSION_MINOR}.${DCPTERM_VERSION_RELEASE}")
-configure_file(version.h.in ${CMAKE_CURRENT_BINARY_DIR}/version.h)
-
 set(dcpterm_SRCS dcpterm.cpp dcptermwin.cpp configdialog.cpp cmdlineoptions.cpp)
 qt4_automoc(${dcpterm_SRCS})
 qt4_wrap_cpp(dcpterm_MOC_SRCS dcptermwin.h configdialog.h)

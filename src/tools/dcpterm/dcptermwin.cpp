@@ -27,7 +27,6 @@
 #include "ui_dcptermwin.h"
 #include "configdialog.h"
 #include "cmdlineoptions.h"
-#include "version.h"
 #include <dcpclient/version.h>
 #include <dcpclient/message.h>
 #include <QtCore/QtDebug>
@@ -519,7 +518,7 @@ void DcpTermWin::on_actionAbout_triggered()
                 "&nbsp;&nbsp;Qt %3</p>" \
                 "<p>%4<br>%5</p>"
             )
-            .arg(DCPTERM_VERSION_STRING)
+            .arg(DCPCLIENT_VERSION_STRING)
             .arg(Dcp::versionString())
             .arg(qVersion())
             .arg(tr("Copyright (c) 2012 Kolja Glogowski"))
