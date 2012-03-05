@@ -24,7 +24,6 @@ if(INSTALL_EXAMPLE_SOURCES)
                   dcpterm/configdialog.ui
                   dcpterm/cmdlineoptions.h
                   dcpterm/cmdlineoptions.cpp
-                  ${CMAKE_CURRENT_BINARY_DIR}/dcpterm/version.h
                   ${CMAKE_CURRENT_BINARY_DIR}/dcpterm.pro
             DESTINATION share/doc/dcpclient/examples/dcpterm)
 endif()
