@@ -55,6 +55,21 @@ QString ackErrorString(int errorCode)
     }
 }
 
+/*! \brief Returns a copy of \a input with percent-encoded space characters.
+
+    This function replaces all space characters (<code>' '</code>) in \a input
+    by the string <code>"%20"</code> and any percent characters
+    (<code>'\%'</code>) by <code>"%25"</code>.
+
+    \note This is a simplified version of the QByteArray::toPercentEncoding()
+          method; you can use the QByteArray::fromPercentEncoding() method
+          to decode the resulting string.
+ */
+QByteArray percentEncodeSpaces(const QByteArray &input)
+{
+    return QByteArray(input).replace("%", "%25").replace(" ", "%20");
+}
+
 /*! \internal
     \brief Implicitly shared message data.
     \todo Use a static null-object instead of the isNull flag. This needs to

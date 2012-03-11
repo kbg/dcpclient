@@ -43,6 +43,7 @@ enum AckErrorCode {
 };
 
 QString ackErrorString(int errorCode);
+QByteArray percentEncodeSpaces(const QByteArray &input);
 
 class MessageData;
 class Message
