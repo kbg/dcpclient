@@ -30,6 +30,7 @@
 
 class QByteArray;
 class QString;
+class QHostAddress;
 
 namespace Dcp {
 
@@ -94,8 +95,11 @@ public:
     QString errorString() const;
 
     QString serverName() const;
+    QHostAddress serverAddress() const;
     quint16 serverPort() const;
     QByteArray deviceName() const;
+    QHostAddress localAddress() const;
+    quint16 localPort() const;
 
     bool autoReconnect() const;
     void setAutoReconnect(bool enable);

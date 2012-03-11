@@ -33,6 +33,7 @@
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QTimer>
 #include <QtNetwork/QTcpSocket>
+#include <QtNetwork/QHostAddress>
 #include <limits>
 
 namespace Dcp {
@@ -609,17 +610,27 @@ QString Client::errorString() const
 /*! \brief Returns the name of the server as specified by connectToServer(),
            or an empty QString if connectToServer() has not been called yet.
 
-    \sa serverPort(), deviceName()
+    \sa serverPort(), serverAddress(), localAddress(), deviceName()
  */
 QString Client::serverName() const
 {
     return d->serverName;
 }
 
+/*! \brief Returns the address of the connected server if the client is in
+           the ConnectedState; otherwise returns QHostAddress::Null.
+
+    \sa serverName(), serverPort(), localAddress(), deviceName()
+ */
+QHostAddress Client::serverAddress() const
+{
+    return d->socket->peerAddress();
+}
+
 /*! \brief Returns the server port as specified by connectToServer(),
            or 0 if connectToServer() has not been called yet.
 
-    \sa serverName(), deviceName()
+    \sa serverName(), serverAddress(), localPort(), deviceName()
  */
 quint16 Client::serverPort() const
 {
@@ -634,6 +645,26 @@ quint16 Client::serverPort() const
 QByteArray Client::deviceName() const
 {
     return d->deviceName;
+}
+
+/*! \brief Returns the host address of the local client socket if available;
+           otherwise returns QHostAddress::Null.
+
+    \sa localPort(), serverPort()
+ */
+QHostAddress Client::localAddress() const
+{
+    return d->socket->localAddress();
+}
+
+/*! \brief Returns the host port of the local client socket if available;
+           otherwise returns 0.
+
+    \sa localAddress(), serverPort()
+ */
+quint16 Client::localPort() const
+{
+    return d->socket->localPort();
 }
 
 /*! \brief Returns true if the auto-reconnect feature is enabled; otherwise
