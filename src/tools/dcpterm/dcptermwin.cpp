@@ -110,7 +110,7 @@ void DcpTermWin::loadSettings()
 
     // server settings and device name
     settings.beginGroup("Server");
-    m_deviceName = settings.value("DeviceName", "dcpterm").toByteArray();
+    m_deviceName = settings.value("DeviceName", "").toByteArray();
     m_serverName = settings.value("ServerName", "localhost").toString();
     uint serverPort = settings.value("ServerPort", 2001).toUInt(&ok);
     m_serverPort = (ok && serverPort <= 0xffff) ? quint16(serverPort) : 2001;
@@ -241,6 +241,16 @@ void DcpTermWin::sendMessage(const Dcp::Message &msg)
     m_dcp->sendMessage(msg);
     if (verboseOutput())
         printLine(formatMessageOutput(msg, false), Qt::blue);
+}
+
+QByteArray DcpTermWin::normalizedDeviceName() const
+{
+    QByteArray deviceName = m_deviceName;
+    if (deviceName.isEmpty() || deviceName.trimmed().isEmpty()) {
+        QString code = QDateTime::currentDateTimeUtc().toString("hhmmsszzz");
+        deviceName = "dcpterm" + code.toAscii();
+    }
+    return deviceName;
 }
 
 void DcpTermWin::printError(const QString &errorText)
@@ -445,7 +455,8 @@ void DcpTermWin::dcp_messageReceived()
 void DcpTermWin::on_actionConnect_triggered(bool checked)
 {
     if (checked && m_dcp->isUnconnected())
-        m_dcp->connectToServer(m_serverName, m_serverPort, m_deviceName);
+        m_dcp->connectToServer(m_serverName, m_serverPort,
+                               normalizedDeviceName());
     else if (!checked && m_dcp->isConnected())
         m_dcp->disconnectFromServer();
 }
@@ -506,7 +517,7 @@ void DcpTermWin::on_actionSettings_triggered()
 
     m_dcp->disconnectFromServer();
     if (m_dcp->waitForDisconnected())
-        m_dcp->connectToServer(m_serverName, m_serverPort, m_deviceName);
+        m_dcp->connectToServer(m_serverName, m_serverPort, normalizedDeviceName());
 }
 
 void DcpTermWin::on_actionAbout_triggered()

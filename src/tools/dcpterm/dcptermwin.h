@@ -49,6 +49,7 @@ protected:
     void closeEvent(QCloseEvent *event);
     bool verboseOutput() const;
     void sendMessage(const Dcp::Message &msg);
+    QByteArray normalizedDeviceName() const;
 
 protected slots:
     void printError(const QString &errorText);
