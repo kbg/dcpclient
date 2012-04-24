@@ -50,6 +50,7 @@ protected:
     bool verboseOutput() const;
     void sendMessage(const Dcp::Message &msg);
     QByteArray normalizedDeviceName() const;
+    void updateDefaultEncoding();
 
 protected slots:
     void printError(const QString &errorText);
@@ -80,6 +81,7 @@ private:
     QByteArray m_deviceName;
     QString m_serverName;
     quint16 m_serverPort;
+    QString m_encoding;
     QLabel *m_connectionStatusLabel;
 };
 

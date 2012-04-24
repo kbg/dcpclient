@@ -60,12 +60,25 @@ void ConfigDialog::setServerPort(quint16 serverPort)
     ui->spinServerPort->setValue(serverPort);
 }
 
-QByteArray ConfigDialog::deviceName() const
+QString ConfigDialog::deviceName() const
 {
-    return ui->editDeviceName->text().toAscii();
+    return ui->editDeviceName->text();
 }
 
-void ConfigDialog::setDeviceName(const QByteArray &deviceName)
+void ConfigDialog::setDeviceName(const QString &deviceName)
 {
     ui->editDeviceName->setText(deviceName);
+}
+
+QString ConfigDialog::encoding() const
+{
+    return ui->comboEncoding->currentText();
+}
+
+void ConfigDialog::setEncoding(const QString &encoding)
+{
+    int index = ui->comboEncoding->findText(encoding, Qt::MatchFixedString);
+    if (index == -1)
+        index = 0;  // select UTF-8 if encoding is unknown
+    ui->comboEncoding->setCurrentIndex(index);
 }

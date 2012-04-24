@@ -63,6 +63,27 @@
      <item row="1" column="1">
       <widget class="QLineEdit" name="editDeviceName"/>
      </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="labelEncoding">
+       <property name="text">
+        <string>Encoding:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QComboBox" name="comboEncoding">
+       <item>
+        <property name="text">
+         <string>UTF-8</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Latin1</string>
+        </property>
+       </item>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>
@@ -81,6 +102,7 @@
   <tabstop>editDeviceName</tabstop>
   <tabstop>editServerName</tabstop>
   <tabstop>spinServerPort</tabstop>
+  <tabstop>comboEncoding</tabstop>
   <tabstop>buttonBox</tabstop>
  </tabstops>
  <resources/>

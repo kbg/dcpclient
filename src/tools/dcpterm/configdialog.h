@@ -44,8 +44,10 @@ public:
     void setServerName(const QString &serverName);
     quint16 serverPort() const;
     void setServerPort(quint16 serverPort);
-    QByteArray deviceName() const;
-    void setDeviceName(const QByteArray &deviceName);
+    QString deviceName() const;
+    void setDeviceName(const QString &deviceName);
+    QString encoding() const;
+    void setEncoding(const QString &encoding);
 
 private:
     Ui::ConfigDialog *ui;

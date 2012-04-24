@@ -51,6 +51,7 @@ DcpTermWin::DcpTermWin(const CmdLineOptions &opts, QWidget *parent)
       ui(new Ui::DcpTermWin),
       m_dcp(new Dcp::Client),
       m_serverPort(0),
+      m_encoding("UTF-8"),
       m_connectionStatusLabel(new QLabel)
 {
     ui->setupUi(this);
@@ -110,11 +111,13 @@ void DcpTermWin::loadSettings()
 
     // server settings and device name
     settings.beginGroup("Server");
+    m_encoding = settings.value("Encoding", "UTF-8").toString();
+    updateDefaultEncoding();
     m_deviceName = settings.value("DeviceName", "").toByteArray();
     m_serverName = settings.value("ServerName", "localhost").toString();
     uint serverPort = settings.value("ServerPort", 2001).toUInt(&ok);
     m_serverPort = (ok && serverPort <= 0xffff) ? quint16(serverPort) : 2001;
-    m_dcp->setAutoReconnect(settings.value("AutoReconnect", true).toBool());
+    m_dcp->setAutoReconnect(settings.value("AutoReconnect", false).toBool());
     ui->actionAutoReconnect->setChecked(m_dcp->autoReconnect());
     int reconnectInverval = settings.value("ReconnectInterval").toInt(&ok);
     if (ok && reconnectInverval > 0)
@@ -197,6 +200,7 @@ void DcpTermWin::saveSettings()
     settings.setValue("DeviceName", QString(m_deviceName));
     settings.setValue("AutoReconnect", ui->actionAutoReconnect->isChecked());
     settings.setValue("ReconnectInterval", m_dcp->reconnectInterval());
+    settings.setValue("Encoding", m_encoding);
     settings.endGroup();
 
     // UI settings (position, size, ...)
@@ -251,6 +255,22 @@ QByteArray DcpTermWin::normalizedDeviceName() const
         deviceName = "dcpterm" + code.toAscii();
     }
     return deviceName;
+}
+
+void DcpTermWin::updateDefaultEncoding()
+{
+    QTextCodec *codec = 0;
+    if (m_encoding.toLower() == "utf-8")
+        codec = QTextCodec::codecForName("UTF-8");
+    if (m_encoding.toLower() == "latin1")
+        codec = QTextCodec::codecForName("ISO 8859-1");
+    else {
+        m_encoding = "UTF-8";
+        codec = QTextCodec::codecForName("UTF-8");
+    }
+
+    if (codec)
+        QTextCodec::setCodecForCStrings(codec);
 }
 
 void DcpTermWin::printError(const QString &errorText)
@@ -507,13 +527,16 @@ void DcpTermWin::on_actionSettings_triggered()
     dlg.setServerName(m_serverName);
     dlg.setServerPort(m_serverPort);
     dlg.setDeviceName(m_deviceName);
+    dlg.setEncoding(m_encoding);
 
     if (dlg.exec() != QDialog::Accepted)
         return;
 
+    m_encoding = dlg.encoding();
+    updateDefaultEncoding();
     m_serverName = dlg.serverName();
     m_serverPort = dlg.serverPort();
-    m_deviceName = dlg.deviceName();
+    m_deviceName = dlg.deviceName().toAscii();
 
     m_dcp->disconnectFromServer();
     if (m_dcp->waitForDisconnected())
