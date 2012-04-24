@@ -1,0 +1,38 @@
+import os, subprocess, platform
+from PyQt4 import pyqtconfig
+
+sip_dir = os.path.join("${CMAKE_CURRENT_SOURCE_DIR}", "sip")
+sip_file = os.path.join(sip_dir, "dcpclientmod.sip")
+
+build_dir = "${CMAKE_CURRENT_BINARY_DIR}"
+build_file = os.path.join(build_dir, "dcpclientmod.sbf")
+
+config = pyqtconfig.Configuration()
+
+command = [config.sip_bin] + config.pyqt_sip_flags.split() + [
+    "-c", build_dir,
+    "-b", build_file,
+    "-I", config.pyqt_sip_dir,
+    "-o",
+    sip_file ]
+
+if ${_verbose_output}:
+    print(" ".join(command))
+
+if platform.system() == "Windows":
+    subprocess.call(command, shell=True)
+else:
+    subprocess.call(command)
+
+#makefile = pyqtconfig.QtNetworkModuleMakefile(
+#    configuration = config,
+#    build_file = build_file,
+#    dir = build_dir)
+
+#makefile.extra_include_dirs = [
+#    "${CMAKE_SOURCE_DIR}/src",
+#    "${CMAKE_BINARY_DIR}/src/dcpclient"
+#]
+#makefile.extra_lib_dirs = [ "${CMAKE_BINARY_DIR}" ]
+#makefile.extra_libs = [ "DcpClient" ]
+#makefile.generate()

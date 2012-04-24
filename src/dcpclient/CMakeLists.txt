@@ -22,6 +22,9 @@ set(libDcpClient_SRCS
 qt4_automoc(${libDcpClient_SRCS})
 
 if(BUILD_STATIC_LIBRARY)
+    # The -fPIC option is needed to link the resulting static library from
+    # shared libraries, in this case from the Python module.
+    set(CMAKE_CXX_FLAGS "-fPIC")
     set(_libtype STATIC)
 else()
     set(_libtype SHARED)
