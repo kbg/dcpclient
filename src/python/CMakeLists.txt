@@ -10,20 +10,29 @@ else()
 endif()
 configure_file(configure.py.in ${CMAKE_CURRENT_BINARY_DIR}/configure.py)
 
+set(pydcp_SIP
+    ${CMAKE_CURRENT_SOURCE_DIR}/sip/dcpclientmod.sip
+    ${CMAKE_CURRENT_SOURCE_DIR}/sip/client.sip
+    ${CMAKE_CURRENT_SOURCE_DIR}/sip/message.sip
+    ${CMAKE_CURRENT_SOURCE_DIR}/sip/messageparser.sip
+    ${CMAKE_CURRENT_SOURCE_DIR}/sip/version.sip
+)
+
 set(pydcp_SRCS
     ${CMAKE_CURRENT_BINARY_DIR}/sipdcpclientcmodule.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/sipdcpclientClient.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/sipdcpclientMessage.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/sipdcpclientMessageParser.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/sipdcpclientReplyParser.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/sipdcpclientCommandParser.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/sipdcpclientDcp.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/sipdcpclientDcpClient.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/sipdcpclientDcpMessage.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/sipdcpclientDcpMessageParser.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/sipdcpclientDcpReplyParser.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/sipdcpclientDcpCommandParser.cpp
 )
 
 add_custom_command(
     OUTPUT ${pydcp_SRCS}
     COMMAND "${PYTHON_EXECUTABLE}" ${CMAKE_CURRENT_BINARY_DIR}/configure.py
     COMMENT "Generating C++ code for Python bindings..."
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/configure.py)
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/configure.py ${pydcp_SIP})
 
 set_property(DIRECTORY APPEND PROPERTY
     ADDITIONAL_MAKE_CLEAN_FILES
@@ -61,10 +70,17 @@ execute_process(COMMAND "${PYTHON_EXECUTABLE}" -c
 
 if(NOT _pydcp_install_path)
     message(FATAL_ERROR
-            "Cannot determine installation directory for Python bindings.")
+        "Cannot determine installation directory for Python bindings.")
+else()
+    set(_pydcp_install_path ${_pydcp_install_path}/dcp)
 endif()
 
 install(TARGETS pydcp DESTINATION ${_pydcp_install_path})
+install(FILES dcp/__init__.py
+              dcp/parser.py
+              dcp/dcpshell.py
+              dcp/shell.py
+        DESTINATION ${_pydcp_install_path})
 
 unset(_verbose_output)
 unset(_pydcp_install_path)
