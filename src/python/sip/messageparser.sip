@@ -1,16 +1,17 @@
+namespace Dcp {
+
 class MessageParser
 /NoDefaultCtors/
 {
 %TypeHeaderCode
 #include <dcpclient/messageparser.h>
-using namespace Dcp;
 %End
 
 public:
     MessageParser();
     virtual ~MessageParser();
     virtual void clear();
-    virtual bool parse(const Message &msg);
+    virtual bool parse(const Dcp::Message &msg);
     QList<QByteArray> arguments() const;
     QByteArray joinedArguments() const;
     bool hasArguments() const;
@@ -19,29 +20,27 @@ public:
 
 
 
-class ReplyParser : public MessageParser
+class ReplyParser : public Dcp::MessageParser
 /NoDefaultCtors/
 {
 %TypeHeaderCode
 #include <dcpclient/messageparser.h>
-using namespace Dcp;
 %End
 
 public:
     ReplyParser();
     void clear();
-    bool parse(const Message &msg);
+    bool parse(const Dcp::Message &msg);
     bool isAckReply() const;
     int errorCode() const;
 };
 
 
-class CommandParser : public MessageParser
+class CommandParser : public Dcp::MessageParser
 /NoDefaultCtors/
 {
 %TypeHeaderCode
 #include <dcpclient/messageparser.h>
-using namespace Dcp;
 %End
 
 public:
@@ -54,8 +53,10 @@ public:
 
     CommandParser();
     void clear();
-    bool parse(const Message &msg);
+    bool parse(const Dcp::Message &msg);
     CmdType cmdType() const;
     QByteArray command() const;
     QByteArray identifier() const;
 };
+
+}; // namespace Dcp
