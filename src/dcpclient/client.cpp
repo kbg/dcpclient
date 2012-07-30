@@ -125,6 +125,10 @@ ClientPrivate::~ClientPrivate()
     delete reconnectTimer;
 }
 
+/*! \todo Check for (FullHeaderSize + MessageDataLen) instead of
+ *      (FullHeaderSize + PacketMsgSize), i.e. don't use msgSize but
+ *      something like pkgSize.
+ */
 bool ClientPrivate::readNextMessageFromSocket()
 {
     if (socket->bytesAvailable() < FullHeaderSize)

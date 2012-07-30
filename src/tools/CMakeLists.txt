@@ -1,5 +1,6 @@
 if(BUILD_TOOLS)
     add_subdirectory(dcpsend)
+    add_subdirectory(dcphub)
     if(QT_QTGUI_FOUND)
         add_subdirectory(dcpterm)
     else()
