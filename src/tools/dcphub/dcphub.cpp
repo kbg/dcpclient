@@ -44,6 +44,17 @@ QByteArray joined(const QList<QByteArray> &list, char sep = ' ')
     return res;
 }
 
+QByteArray deviceKey(const QByteArray &deviceName, bool percentDecode = false)
+{
+    int deviceNameLen = qMin(deviceName.size(), int(MessageDeviceNameSize));
+    QByteArray key = percentDecode ?
+            QByteArray::fromPercentEncoding(deviceName) : deviceName;
+    key.resize(MessageDeviceNameSize);
+    for (int i = deviceNameLen; i < MessageDeviceNameSize; ++i)
+        key[i] = '\0';
+    return key;
+}
+
 DcpHub::DcpHub(QObject *parent)
     : QObject(parent),
       cout(stdout, QIODevice::WriteOnly),
@@ -287,7 +298,7 @@ void DcpHub::handleCommand(const Dcp::Message &msg)
 {
     Q_ASSERT(!msg.isNull() && !msg.isReply());
     Q_ASSERT(isServerDeviceName(msg.destination()));
-    QTcpSocket *socket = m_deviceMap.value(msg.source(), 0);
+    QTcpSocket *socket = m_deviceMap.value(deviceKey(msg.source()), 0);
     if (!socket) {
         qWarning("DcpHub::handleCommand(): Unknown socket.");
         return;
@@ -328,11 +339,7 @@ void DcpHub::handleCommand(const Dcp::Message &msg)
             QList<QByteArray> result;
             foreach (QByteArray device, args)
             {
-                int devNameLen = qMin(device.size(), int(MessageDeviceNameSize));
-                QByteArray key = QByteArray::fromPercentEncoding(device);
-                key.resize(MessageDeviceNameSize);
-                for (int i = devNameLen; i < MessageDeviceNameSize; ++i)
-                    key[i] = '\0';
+                QByteArray key = deviceKey(device, true);
                 QTcpSocket *devSocket = m_deviceMap.value(key, 0);
                 if (devSocket) {
                     Q_ASSERT(m_socketMap.contains(devSocket));
