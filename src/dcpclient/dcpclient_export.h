@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011 Kolja Glogowski
+ * Copyright (c) 2012 Kolja Glogowski
+ * Kiepenheuer-Institut fuer Sonnenphysik
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -23,26 +24,19 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef DCPCLIENT_VERSION_H
-#define DCPCLIENT_VERSION_H
+#ifndef DCPCLIENT_EXPORT_H
+#define DCPCLIENT_EXPORT_H
 
-#include "dcpclient_export.h"
+#include <QtCore/QtGlobal>
 
-#define DCPCLIENT_VERSION_MAJOR @DCPCLIENT_VERSION_MAJOR@
-#define DCPCLIENT_VERSION_MINOR @DCPCLIENT_VERSION_MINOR@
-#define DCPCLIENT_VERSION_RELEASE @DCPCLIENT_VERSION_RELEASE@
-#define DCPCLIENT_VERSION_STRING "@DCPCLIENT_VERSION_STRING@"
+#ifndef DCPCLIENT_EXPORT
+#  if defined(DCPCLIENT_STATIC_LIB)
+#    define DCPCLIENT_EXPORT
+#  elif defined(MAKE_DCPCLIENT_LIBRARY)
+#    define DCPCLIENT_EXPORT Q_DECL_EXPORT
+#  else
+#    define DCPCLIENT_EXPORT Q_DECL_IMPORT
+#  endif
+#endif
 
-#define DCPCLIENT_VERSION \
-    ((DCPCLIENT_VERSION_MAJOR << 16) | \
-     (DCPCLIENT_VERSION_MINOR << 8) | \
-     (DCPCLIENT_VERSION_RELEASE))
-
-namespace Dcp {
-    DCPCLIENT_EXPORT unsigned int versionMajor();
-    DCPCLIENT_EXPORT unsigned int versionMinor();
-    DCPCLIENT_EXPORT unsigned int versionRelease();
-    DCPCLIENT_EXPORT const char * versionString();
-}
-
-#endif // DCPCLIENT_VERSION_H
+#endif // DCPCLIENT_EXPORT_H

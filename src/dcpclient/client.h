@@ -26,6 +26,7 @@
 #ifndef DCPCLIENT_CLIENT_H
 #define DCPCLIENT_CLIENT_H
 
+#include "dcpclient_export.h"
 #include <QtCore/QObject>
 
 class QByteArray;
@@ -37,7 +38,7 @@ namespace Dcp {
 class Message;
 
 class ClientPrivate;
-class Client : public QObject
+class DCPCLIENT_EXPORT Client : public QObject
 {
     Q_OBJECT
     Q_ENUMS(State Error)

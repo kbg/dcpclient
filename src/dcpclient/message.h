@@ -26,6 +26,7 @@
 #ifndef DCPCLIENT_MESSAGE_H
 #define DCPCLIENT_MESSAGE_H
 
+#include "dcpclient_export.h"
 #include <QtCore/QByteArray>
 #include <QtCore/QSharedDataPointer>
 
@@ -42,11 +43,11 @@ enum AckErrorCode {
     AckWrongModeError = 5
 };
 
-QString ackErrorString(int errorCode);
-QByteArray percentEncodeSpaces(const QByteArray &input);
+DCPCLIENT_EXPORT QString ackErrorString(int errorCode);
+DCPCLIENT_EXPORT QByteArray percentEncodeSpaces(const QByteArray &input);
 
 class MessageData;
-class Message
+class DCPCLIENT_EXPORT Message
 {
 public:
     enum {
@@ -107,8 +108,8 @@ private:
     QSharedDataPointer<MessageData> d;
 };
 
-QTextStream & operator << (QTextStream &os, const Dcp::Message &msg);
-QDebug operator << (QDebug debug, const Dcp::Message &msg);
+DCPCLIENT_EXPORT QTextStream & operator<<(QTextStream &os, const Dcp::Message &msg);
+DCPCLIENT_EXPORT QDebug operator<<(QDebug debug, const Dcp::Message &msg);
 
 
 } // namespace Dcp

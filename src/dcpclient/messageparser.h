@@ -26,7 +26,7 @@
 #ifndef DCPCLIENT_MESSAGEPARSER_H
 #define DCPCLIENT_MESSAGEPARSER_H
 
-#include <QtCore/qglobal.h>
+#include "dcpclient_export.h"
 
 class QByteArray;
 template <typename T> class QList;
@@ -36,7 +36,7 @@ namespace Dcp {
 class Message;
 
 class MessageParserPrivate;
-class MessageParser
+class DCPCLIENT_EXPORT MessageParser
 {
 public:
     MessageParser();
@@ -58,7 +58,7 @@ private:
 };
 
 class ReplyParserPrivate;
-class ReplyParser : public MessageParser
+class DCPCLIENT_EXPORT ReplyParser : public MessageParser
 {
 public:
     ReplyParser();
@@ -76,7 +76,7 @@ private:
 };
 
 class CommandParserPrivate;
-class CommandParser : public MessageParser
+class DCPCLIENT_EXPORT CommandParser : public MessageParser
 {
 public:
     enum CmdType {
