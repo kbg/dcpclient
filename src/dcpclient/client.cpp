@@ -174,7 +174,7 @@ void ClientPrivate::writeMessageToSocket(const Message &msg)
         return;
     }
 
-    if (!msg.data().size() + FullHeaderSize > MaxPacketSize) {
+    if (msg.data().size() + FullHeaderSize > MaxPacketSize) {
         qWarning("Dcp::Client::sendMessage: Skipping large message. " \
                  "Multi-packet messages are currently not supported.");
         return;
