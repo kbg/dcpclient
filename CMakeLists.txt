@@ -18,5 +18,11 @@ option(INSTALL_EXAMPLE_SOURCES "Install source code of the utility and example p
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
+# Use RPATH on UNIX operating systems
+if(UNIX)
+    set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+endif()
+
 add_subdirectory(src)
 add_subdirectory(doc)
