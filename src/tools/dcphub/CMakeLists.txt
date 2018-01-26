@@ -8,7 +8,8 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-set(dcphub_SRCS dcphub.cpp dcphub_main.cpp dcppacket.cpp hexformatter.cpp)
+set(dcphub_SRCS dcphub.cpp dcphub_main.cpp dcppacket.cpp hexformatter.cpp
+    cmdlineoptions.cpp)
 qt4_automoc(${dcphub_SRCS})
 qt4_wrap_cpp(dcphub_MOC_SRCS dcphub.h)
 add_executable(dcphub ${dcphub_SRCS} ${dcphub_MOC_SRCS})

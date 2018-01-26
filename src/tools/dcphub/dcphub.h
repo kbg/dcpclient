@@ -46,12 +46,25 @@ class DcpHub : public QObject
     Q_OBJECT
 
 public:
+    enum DebugFlags {
+        NoDebug = 0x00,
+        MessageDebug = 0x01,
+        PacketDebug = 0x02,
+        FullDebug = MessageDebug | PacketDebug
+    };
+
     explicit DcpHub(QObject *parent = 0);
     ~DcpHub();
 
     bool listen(const QHostAddress &address = QHostAddress::Any,
                 quint16 port = 2001);
     void close();
+
+    QByteArray deviceName() const { return m_serverDeviceName; }
+    bool setDeviceName(const QByteArray &name);
+
+    DebugFlags debugFlags() const { return m_debugFlags; }
+    void setDebugFlags(DebugFlags mode) { m_debugFlags = mode; }
 
 protected slots:
     void newConnection();
@@ -78,13 +91,6 @@ protected:
 
     typedef QMap<QTcpSocket *, ClientInfo> SocketMap;
     typedef QMap<QByteArray, QTcpSocket *> DeviceMap;
-
-    enum DebugFlags {
-        NoDebug = 0x00,
-        MessageDebug = 0x01,
-        PacketDebug = 0x02,
-        FullDebug = MessageDebug | PacketDebug
-    };
 
 private:
     Q_DISABLE_COPY(DcpHub)

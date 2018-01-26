@@ -23,36 +23,36 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "dcphub.h"
-#include "cmdlineoptions.h"
-#include <QtCore/QtCore>
-#include <csignal>
+#ifndef DCPHUB_CMDLINEOPTIONS_H
+#define DCPHUB_CMDLINEOPTIONS_H
 
-static void exitHandler(int param) {
-    // shut down the application
-    QTextStream cout(stdout, QIODevice::WriteOnly);
-    cout << "Shutting down..." << endl;
-    QCoreApplication::exit(0);
-}
+#include "dcphub.h"  // for DcpHub::DebugFlags
+#include <QtCore/QByteArray>
+#include <QtCore/QTextStream>
+#include <QtNetwork/QHostAddress>
 
-int main(int argc, char **argv)
+class QString;
+
+class CmdLineOptions
 {
-    QCoreApplication app(argc, argv);
-    app.setApplicationName(QFileInfo(app.arguments()[0]).fileName());
+    QTextStream cout;
+    QTextStream cerr;
 
-    // use custom signal handler for SIGINT and SIGTERM
-    signal(SIGINT, exitHandler);
-    signal(SIGTERM, exitHandler);
+public:
+    CmdLineOptions();
+    bool parse();
+    void printHelp();
 
-    CmdLineOptions opts;
-    if (!opts.parse()) return 1;
-    else if (opts.help) return 0;
+protected:
+    void printReqArg(const QString &optionName);
+    QString moreInfo();
 
-    DcpHub dcpHub;
-    dcpHub.setDeviceName(opts.deviceName);
-    dcpHub.setDebugFlags(opts.debugFlags);
-    if (!dcpHub.listen(opts.address, opts.port))
-        return 1;
+public:
+    QHostAddress address;
+    quint16 port;
+    QByteArray deviceName;
+    DcpHub::DebugFlags debugFlags;
+    bool help;
+};
 
-    return app.exec();
-}
+#endif // DCPHUB_CMDLINEOPTIONS_H

@@ -99,6 +99,15 @@ void DcpHub::close()
     m_tcpServer->close();
 }
 
+bool DcpHub::setDeviceName(const QByteArray &name)
+{
+    if (m_tcpServer->isListening() || name.isEmpty())
+        return false;
+    m_serverDeviceName = name;
+    m_serverDeviceName.truncate(MessageDeviceNameSize);
+    return true;
+}
+
 void DcpHub::newConnection()
 {
     QTcpSocket *socket = m_tcpServer->nextPendingConnection();
