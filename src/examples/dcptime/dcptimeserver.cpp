@@ -25,7 +25,7 @@
 
 #include "dcptimeserver.h"
 #include <dcpclient/message.h>
-#include <QtCore/QtCore>
+#include <QtCore>
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);
 

@@ -2,6 +2,9 @@ project(dcpterm)
 
 include_directories(
     ${QT_INCLUDE_DIR}
+    ${QT_QTCORE_INCLUDE_DIR}
+    ${QT_QTNETWORK_INCLUDE_DIR}
+    ${QT_QTGUI_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_BINARY_DIR}/src

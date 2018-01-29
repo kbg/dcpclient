@@ -25,8 +25,8 @@
 
 #include "dcptermwin.h"
 #include "cmdlineoptions.h"
-#include <QtGui/QApplication>
-#include <QtCore/QFileInfo>
+#include <QApplication>
+#include <QFileInfo>
 
 int main(int argc, char **argv)
 {

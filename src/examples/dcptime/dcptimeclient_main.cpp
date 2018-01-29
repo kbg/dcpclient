@@ -24,7 +24,7 @@
  */
 
 #include "dcptimeclient.h"
-#include <QtGui/QtGui>
+#include <QtGui>
 
 static QTextStream cout(stdout, QIODevice::WriteOnly);
 static QTextStream cerr(stderr, QIODevice::WriteOnly);

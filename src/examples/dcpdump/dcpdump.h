@@ -27,10 +27,10 @@
 #define DCPDUMP_H
 
 #include <dcpclient/client.h>
-#include <QtCore/QObject>
-#include <QtCore/QString>
-#include <QtCore/QByteArray>
-#include <QtCore/QMap>
+#include <QObject>
+#include <QString>
+#include <QByteArray>
+#include <QMap>
 
 class DcpDump : public QObject
 {

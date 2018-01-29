@@ -24,8 +24,8 @@
  */
 
 #include "cmdlineoptions.h"
-#include <QtCore/QCoreApplication>
-#include <QtCore/QStringList>
+#include <QCoreApplication>
+#include <QStringList>
 
 CmdLineOptions::CmdLineOptions()
     : cout(stdout, QIODevice::WriteOnly),

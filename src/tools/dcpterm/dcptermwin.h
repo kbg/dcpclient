@@ -28,7 +28,7 @@
 
 #include <dcpclient/client.h>
 #include <dcpclient/messageparser.h>
-#include <QtGui/QMainWindow>
+#include <QMainWindow>
 
 class QColor;
 class QLabel;

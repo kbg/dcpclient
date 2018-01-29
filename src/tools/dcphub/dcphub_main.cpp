@@ -25,7 +25,7 @@
 
 #include "dcphub.h"
 #include "cmdlineoptions.h"
-#include <QtCore/QtCore>
+#include <QtCore>
 #include <csignal>
 
 static void exitHandler(int param) {

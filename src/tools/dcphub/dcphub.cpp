@@ -28,9 +28,9 @@
 #include <dcpclient/message.h>
 #include <dcpclient/messageparser.h>
 #include <dcpclient/version.h>
-#include <QtCore/QtCore>
-#include <QtNetwork/QTcpServer>
-#include <QtNetwork/QTcpSocket>
+#include <QtCore>
+#include <QTcpServer>
+#include <QTcpSocket>
 
 QByteArray joined(const QList<QByteArray> &list, char sep = ' ')
 {

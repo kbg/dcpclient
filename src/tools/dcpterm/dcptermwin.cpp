@@ -29,8 +29,8 @@
 #include "cmdlineoptions.h"
 #include <dcpclient/version.h>
 #include <dcpclient/message.h>
-#include <QtCore/QtDebug>
-#include <QtGui/QtGui>
+#include <QtDebug>
+#include <QtGui>
 
 inline static QString formatMessageOutput(const Dcp::Message &msg, bool incoming)
 {

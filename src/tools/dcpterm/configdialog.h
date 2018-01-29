@@ -26,7 +26,7 @@
 #ifndef CONFIGDIALOG_H
 #define CONFIGDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QDialog>
 
 namespace Ui {
     class ConfigDialog;

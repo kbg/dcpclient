@@ -26,7 +26,7 @@
 #ifndef HEXFORMATTER_H
 #define HEXFORMATTER_H
 
-#include <QtCore/QByteArray>
+#include <QByteArray>
 
 class HexFormatter
 {

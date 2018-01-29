@@ -26,9 +26,9 @@
 #ifndef CMDLINEOPTIONS_H
 #define CMDLINEOPTIONS_H
 
-#include <QtCore/QString>
-#include <QtCore/QByteArray>
-#include <QtCore/QTextStream>
+#include <QString>
+#include <QByteArray>
+#include <QTextStream>
 
 class CmdLineOptions
 {

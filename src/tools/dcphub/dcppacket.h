@@ -26,8 +26,8 @@
 #ifndef DCPHUB_DCPPACKET_H
 #define DCPHUB_DCPPACKET_H
 
-#include <QtCore/QtEndian>
-#include <QtCore/QByteArray>
+#include <QtEndian>
+#include <QByteArray>
 
 // DCP packet/message structure (copied from dcpclient_p.h)
 enum {

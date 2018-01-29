@@ -28,8 +28,8 @@
 
 #include <dcpclient/client.h>
 #include <dcpclient/messageparser.h>
-#include <QtGui/QWidget>
-#include <QtCore/QElapsedTimer>
+#include <QWidget>
+#include <QElapsedTimer>
 
 class QLabel;
 class QComboBox;

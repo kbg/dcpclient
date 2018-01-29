@@ -27,9 +27,9 @@
 #define DCPHUB_CMDLINEOPTIONS_H
 
 #include "dcphub.h"  // for DcpHub::DebugFlags
-#include <QtCore/QByteArray>
-#include <QtCore/QTextStream>
-#include <QtNetwork/QHostAddress>
+#include <QByteArray>
+#include <QTextStream>
+#include <QHostAddress>
 
 class QString;
 

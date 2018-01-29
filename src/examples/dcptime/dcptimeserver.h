@@ -28,9 +28,9 @@
 
 #include <dcpclient/client.h>
 #include <dcpclient/messageparser.h>
-#include <QtCore/QObject>
-#include <QtCore/QString>
-#include <QtCore/QByteArray>
+#include <QObject>
+#include <QString>
+#include <QByteArray>
 
 class DcpTimeServer : public QObject
 {

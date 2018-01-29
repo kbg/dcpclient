@@ -27,11 +27,11 @@
 #define DCPHUB_H
 
 #include "hexformatter.h"
-#include <QtCore/QObject>
-#include <QtCore/QByteArray>
-#include <QtCore/QMap>
-#include <QtCore/QTextStream>
-#include <QtNetwork/QHostAddress>
+#include <QObject>
+#include <QByteArray>
+#include <QMap>
+#include <QTextStream>
+#include <QHostAddress>
 
 class QTcpServer;
 class QTcpSocket;
