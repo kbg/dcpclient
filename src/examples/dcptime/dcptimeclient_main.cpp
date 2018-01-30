@@ -79,7 +79,7 @@ public:
                     printReqArg("-n");
                     return false;
                 }
-                deviceName = it->toAscii();
+                deviceName = it->toLatin1();
             }
             else if (it->startsWith('-')) {
                 cerr << appName << ": unknown option `" << *it << "'.\n"

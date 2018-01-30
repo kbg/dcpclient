@@ -91,7 +91,7 @@ public:
                     return false;
                 }
 
-                deviceName = it->toAscii();
+                deviceName = it->toLatin1();
             }
             else if (it->startsWith('-'))
             {
@@ -108,8 +108,8 @@ public:
                     return false;
                 }
 
-                QByteArray dev1 = devs[0].toAscii();
-                QByteArray dev2 = devs[1].toAscii();
+                QByteArray dev1 = devs[0].toLatin1();
+                QByteArray dev2 = devs[1].toLatin1();
                 if (deviceMap.contains(dev1) || deviceMap.contains(dev2)) {
                     cerr << appName << ": device mappings must be unique.\n"
                          << moreInfo() << endl;

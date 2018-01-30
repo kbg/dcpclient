@@ -93,7 +93,7 @@ public:
                     return false;
                 }
 
-                deviceName = it->toAscii();
+                deviceName = it->toLatin1();
             }
             else if (*it == "-d") {
                 if (++it == args.end()) {
@@ -136,7 +136,7 @@ public:
                 return false;
             }
             else
-                destList << it->toAscii();
+                destList << it->toLatin1();
         }
 
         if (destList.isEmpty()) {
@@ -211,7 +211,7 @@ int main(int argc, char **argv)
         if (!line.isEmpty())
         {
             // Send message to all device in destList
-            Dcp::Message msg(0, opts.deviceName, "", line.toAscii(), 0);
+            Dcp::Message msg(0, opts.deviceName, "", line.toLatin1(), 0);
             foreach (QByteArray dest, opts.destList)
             {
                 msg.setSnr(++snr);

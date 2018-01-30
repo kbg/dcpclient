@@ -354,7 +354,7 @@ void DcpHub::handleCommand(const Dcp::Message &msg)
                     Q_ASSERT(m_socketMap.contains(devSocket));
                     ClientInfo info = m_socketMap.value(devSocket);
                     result.append(device);
-                    result.append(info.address.toString().toAscii());
+                    result.append(info.address.toString().toLatin1());
                     result.append(QByteArray::number(info.port));
                 }
                 else

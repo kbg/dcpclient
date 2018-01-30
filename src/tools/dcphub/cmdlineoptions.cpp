@@ -85,7 +85,7 @@ bool CmdLineOptions::parse()
                 return false;
             }
 
-            deviceName = it->toAscii();
+            deviceName = it->toLatin1();
         }
         else if (*it == "-d") {
             if (++it == args.end()) {
@@ -93,7 +93,7 @@ bool CmdLineOptions::parse()
                 return false;
             }
 
-            QByteArray value = it->toAscii();
+            QByteArray value = it->toLatin1();
             if (value == "none")
                 debugFlags = DcpHub::NoDebug;
             else if (value == "msg")

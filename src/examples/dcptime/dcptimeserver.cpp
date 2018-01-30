@@ -122,15 +122,15 @@ void DcpTimeServer::messageReceived()
         }
         else if (identifier == "time") {
             m_dcp.sendMessage(msg.replyMessage(
-                now.toString("HH:mm:ss.zzz").toAscii()));
+                now.toString("HH:mm:ss.zzz").toLatin1()));
         }
         else if (identifier == "date") {
             m_dcp.sendMessage(msg.replyMessage(
-                now.toString("yyyy-MM-dd").toAscii()));
+                now.toString("yyyy-MM-dd").toLatin1()));
         }
         else if (identifier == "datetime") {
             m_dcp.sendMessage(msg.replyMessage(
-                now.toString("yyyy-MM-ddTHH:mm:ss.zzz").toAscii()));
+                now.toString("yyyy-MM-ddTHH:mm:ss.zzz").toLatin1()));
         }
         else if (identifier == "julian") {
             now = now.toUTC();
