@@ -1,11 +1,5 @@
 project(libDcpClient)
 
-include_directories(
-    ${QT_INCLUDE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}
-)
-
 set(DCPCLIENT_LIB_VERSION ${DCPCLIENT_VERSION_STRING})
 set(DCPCLIENT_LIB_SOVERSION ${DCPCLIENT_VERSION_MAJOR})
 configure_file(version.h.in ${CMAKE_CURRENT_BINARY_DIR}/version.h)
@@ -19,6 +13,7 @@ set(libDcpClient_public_HDRS
     message.h
     messageparser.h
 )
+
 set(libDcpClient_SRCS
     client.cpp
     message.cpp
@@ -26,7 +21,6 @@ set(libDcpClient_SRCS
     dcpclient_p.cpp
     version.cpp
 )
-qt4_automoc(${libDcpClient_SRCS})
 
 if(BUILD_STATIC_LIBRARY)
     # The -fPIC option is needed to link the resulting static library from
@@ -39,9 +33,7 @@ else()
 endif()
 
 add_library(DcpClient ${_libtype} ${libDcpClient_SRCS})
-target_link_libraries(DcpClient ${QT_QTCORE_LIBRARY} ${QT_QTNETWORK_LIBRARY})
-target_link_libraries(DcpClient LINK_INTERFACE_LIBRARIES
-    ${QT_QTCORE_LIBRARY} ${QT_QTNETWORK_LIBRARY})
+target_link_libraries(DcpClient Qt4::QtCore Qt4::QtNetwork)
 
 set_target_properties(DcpClient PROPERTIES
     DEFINE_SYMBOL MAKE_DCPCLIENT_LIBRARY

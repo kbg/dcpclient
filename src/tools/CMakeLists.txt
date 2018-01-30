@@ -1,7 +1,7 @@
 if(BUILD_TOOLS)
     add_subdirectory(dcpsend)
     add_subdirectory(dcphub)
-    if(QT_QTGUI_FOUND)
+    if(TARGET Qt4::QtGui)
         add_subdirectory(dcpterm)
     else()
         message("Skipping build of dcpterm because of missing QtGui library.")

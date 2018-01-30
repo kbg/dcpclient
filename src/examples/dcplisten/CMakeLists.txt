@@ -1,17 +1,9 @@
 project(dcplisten)
 
-include_directories(
-    ${QT_INCLUDE_DIR}
-    ${QT_QTCORE_INCLUDE_DIR}
-    ${QT_QTNETWORK_INCLUDE_DIR}
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}
-)
+include_directories(${CMAKE_SOURCE_DIR}/src)
 
 set(dcplisten_SRCS dcplisten.cpp)
 add_executable(dcplisten ${dcplisten_SRCS})
-target_link_libraries(dcplisten DcpClient
-    ${QT_QTCORE_LIBRARY} ${QT_QTNETWORK_LIBRARY})
+target_link_libraries(dcplisten DcpClient Qt4::QtNetwork)
 
 install(TARGETS dcplisten RUNTIME DESTINATION bin)

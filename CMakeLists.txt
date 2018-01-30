@@ -1,12 +1,23 @@
 project(dcpclient)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.12)
 
 set(DCPCLIENT_VERSION_MAJOR 0)
 set(DCPCLIENT_VERSION_MINOR 3)
 set(DCPCLIENT_VERSION_RELEASE 2)
 set(DCPCLIENT_VERSION_STRING "${DCPCLIENT_VERSION_MAJOR}.${DCPCLIENT_VERSION_MINOR}.${DCPCLIENT_VERSION_RELEASE}")
 
-find_package(Qt4 4.7.0 COMPONENTS QtCore QtNetwork REQUIRED)
+if(POLICY CMP0071)
+    # CMake 3.10 changed the AUTOMOC behaviour on generated files (like UI
+    # header files). To silence the warnings, we set it explicitly to the old
+    # behaviour here.
+    cmake_policy(SET CMP0071 OLD)
+endif()
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+find_package(Qt4 4.7.0 REQUIRED COMPONENTS QtCore QtNetwork)
+find_package(Qt4 4.7.0 QUIET COMPONENTS QtGui)
 
 option(BUILD_STATIC_LIBRARY "Build dcpclient as static library." FALSE)
 option(BUILD_TOOLS "Build utility programs." FALSE)

@@ -823,4 +823,6 @@ bool Client::waitForMessagesWritten(int msecs)
 
 } // namespace Dcp
 
-#include "client.moc"
+// This include is neccessary with AUTOMOC because Q_PRIVATE_SLOT is used in
+// the header file.
+#include "moc_client.cpp"
