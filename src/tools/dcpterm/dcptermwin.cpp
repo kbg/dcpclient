@@ -30,7 +30,13 @@
 #include <dcpclient/version.h>
 #include <dcpclient/message.h>
 #include <QtDebug>
+
+#include <QtGlobal>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#include <QtWidgets>
+#else
 #include <QtGui>
+#endif
 
 DcpTermWin::DcpTermWin(const CmdLineOptions &opts, QWidget *parent)
     : QMainWindow(parent),
