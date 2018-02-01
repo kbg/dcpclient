@@ -16,8 +16,17 @@ endif()
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-find_package(Qt4 4.7.0 REQUIRED COMPONENTS QtCore QtNetwork)
-find_package(Qt4 4.7.0 QUIET COMPONENTS QtGui)
+option(BUILD_USE_QT4 "Use Qt4 even if Qt5 is installed" FALSE)
+
+if (NOT BUILD_USE_QT4)
+    find_package(Qt5 REQUIRED COMPONENTS Core Network)
+    find_package(Qt5 QUIET COMPONENTS Widgets)
+endif()
+
+if (NOT TARGET Qt5::Core)
+    find_package(Qt4 4.7.0 REQUIRED COMPONENTS QtCore QtNetwork)
+    find_package(Qt4 4.7.0 QUIET COMPONENTS QtGui)
+endif()
 
 option(BUILD_STATIC_LIBRARY "Build dcpclient as static library." FALSE)
 option(BUILD_TOOLS "Build utility programs." FALSE)

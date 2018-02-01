@@ -13,9 +13,18 @@ set(dcpterm_SRCS
 )
 
 # We cannot use CMAKE_AUTOUIC, because it is only available for CMake 3
-qt4_wrap_ui(dcpterm_UI_HDRS dcptermwin.ui configdialog.ui)
+if (TARGET Qt5::Core)
+    qt5_wrap_ui(dcpterm_UI_HDRS dcptermwin.ui configdialog.ui)
+else()
+    qt4_wrap_ui(dcpterm_UI_HDRS dcptermwin.ui configdialog.ui)
+endif()
 
 add_executable(dcpterm ${dcpterm_SRCS} ${dcpterm_UI_HDRS})
-target_link_libraries(dcpterm DcpClient Qt4::QtNetwork Qt4::QtGui)
+
+if (TARGET Qt5::Core)
+    target_link_libraries(dcpterm DcpClient Qt5::Widgets)
+else()
+    target_link_libraries(dcpterm DcpClient Qt4::QtGui)
+endif()
 
 install(TARGETS dcpterm RUNTIME DESTINATION bin)

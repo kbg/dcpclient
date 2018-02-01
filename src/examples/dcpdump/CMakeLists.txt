@@ -8,6 +8,6 @@ set(dcpdump_SRCS
 )
 
 add_executable(dcpdump ${dcpdump_SRCS})
-target_link_libraries(dcpdump DcpClient Qt4::QtNetwork)
+target_link_libraries(dcpdump DcpClient)
 
 install(TARGETS dcpdump RUNTIME DESTINATION bin)

@@ -14,6 +14,6 @@ set(dcphub_SRCS
 )
 
 add_executable(dcphub ${dcphub_SRCS})
-target_link_libraries(dcphub DcpClient Qt4::QtNetwork)
+target_link_libraries(dcphub DcpClient)
 
 install(TARGETS dcphub RUNTIME DESTINATION bin)

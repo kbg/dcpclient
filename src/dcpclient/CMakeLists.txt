@@ -33,7 +33,12 @@ else()
 endif()
 
 add_library(DcpClient ${_libtype} ${libDcpClient_SRCS})
-target_link_libraries(DcpClient Qt4::QtCore Qt4::QtNetwork)
+
+if (TARGET Qt5::Core)
+    target_link_libraries(DcpClient PUBLIC Qt5::Core Qt5::Network)
+else()
+    target_link_libraries(DcpClient PUBLIC Qt4::QtCore Qt4::QtNetwork)
+endif()
 
 set_target_properties(DcpClient PROPERTIES
     DEFINE_SYMBOL MAKE_DCPCLIENT_LIBRARY
