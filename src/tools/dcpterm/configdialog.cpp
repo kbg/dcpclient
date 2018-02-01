@@ -79,6 +79,6 @@ void ConfigDialog::setEncoding(const QString &encoding)
 {
     int index = ui->comboEncoding->findText(encoding, Qt::MatchFixedString);
     if (index == -1)
-        index = 0;  // select UTF-8 if encoding is unknown
+        index = 0;  // select Latin1 if encoding is unknown
     ui->comboEncoding->setCurrentIndex(index);
 }

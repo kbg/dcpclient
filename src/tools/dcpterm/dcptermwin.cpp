@@ -43,8 +43,8 @@ DcpTermWin::DcpTermWin(const CmdLineOptions &opts, QWidget *parent)
       ui(new Ui::DcpTermWin),
       m_dcp(new Dcp::Client),
       m_serverPort(0),
-      m_encoding("UTF-8"),
-      m_codec(0),
+      m_encoding("Latin1"),
+      m_codec(QTextCodec::codecForName("ISO-8859-1")),
       m_connectionStatusLabel(new QLabel)
 {
     ui->setupUi(this);
@@ -105,7 +105,7 @@ void DcpTermWin::loadSettings()
 
     // server settings and device name
     settings.beginGroup("Server");
-    m_encoding = settings.value("Encoding", "UTF-8").toString();
+    m_encoding = settings.value("Encoding", "Latin1").toString();
     updateTextCodec();
     m_deviceName = settings.value("DeviceName", "").toString();
     m_serverName = settings.value("ServerName", "localhost").toString();
@@ -256,14 +256,14 @@ void DcpTermWin::updateTextCodec()
 {
     m_codec = 0;
 
-    if (m_encoding.toLower() == "utf-8")
-        m_codec = QTextCodec::codecForName("UTF-8");
     if (m_encoding.toLower() == "latin1")
         m_codec = QTextCodec::codecForName("ISO-8859-1");
+    else if (m_encoding.toLower() == "utf-8")
+        m_codec = QTextCodec::codecForName("UTF-8");
 
     if (!m_codec) {
-        m_encoding = "UTF-8";
-        m_codec = QTextCodec::codecForName("UTF-8");
+        m_encoding = "Latin1";
+        m_codec = QTextCodec::codecForName("ISO-8859-1");
     }
 
     Q_ASSERT(m_codec);

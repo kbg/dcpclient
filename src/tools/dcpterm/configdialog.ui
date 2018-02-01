@@ -74,12 +74,12 @@
       <widget class="QComboBox" name="comboEncoding">
        <item>
         <property name="text">
-         <string>UTF-8</string>
+         <string>Latin1</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>Latin1</string>
+         <string>UTF-8</string>
         </property>
        </item>
       </widget>
