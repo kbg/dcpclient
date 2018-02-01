@@ -443,10 +443,10 @@ QTextStream & operator << (QTextStream &os, const Dcp::Message &msg)
         << (msg.isReply() ? "r" : "-")
         << hex << " [0x" << msg.flags() << dec << "] "
         << "#" << msg.snr() << " "
-        << "\"" << msg.source() << "\" -> "
-        << "\"" << msg.destination() << "\" "
+        << "\"" << QString::fromLatin1(msg.source()) << "\" -> "
+        << "\"" << QString::fromLatin1(msg.destination()) << "\" "
         << "[" << msg.data().size() << "] "
-        << "\"" << msg.data() << "\"";
+        << "\"" << QString::fromLatin1(msg.data()) << "\"";
 }
 
 /*! \brief QDebug output operator for Dcp::Message objects.
@@ -473,10 +473,10 @@ QDebug operator << (QDebug debug, const Dcp::Message &msg)
         << (msg.isReply() ? "r" : "-")
         << hex << " [0x" << msg.flags() << dec << "] "
         << "#" << msg.snr() << " "
-        << msg.source() << " -> "
-        << msg.destination() << " "
+        << QString::fromLatin1(msg.source()) << " -> "
+        << QString::fromLatin1(msg.destination()) << " "
         << "[" << msg.data().size() << "] "
-        << msg.data();
+        << QString::fromLatin1(msg.data());
     return debug.space();
 }
 
