@@ -47,8 +47,8 @@ protected:
 public:
     QString serverName;
     quint16 serverPort;
-    QByteArray deviceName;
-    QByteArray destDeviceName;
+    QString deviceName;
+    QString destDeviceName;
     bool help;
 };
 

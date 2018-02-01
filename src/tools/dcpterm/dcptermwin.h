@@ -50,7 +50,8 @@ protected:
     bool verboseOutput() const;
     void sendMessage(const Dcp::Message &msg);
     QByteArray normalizedDeviceName() const;
-    void updateDefaultEncoding();
+    void updateTextCodec();
+    QString formatMessageOutput(const Dcp::Message &msg, bool incoming) const;
 
 protected slots:
     void printError(const QString &errorText);
@@ -78,10 +79,11 @@ private:
     Dcp::Client *m_dcp;
     Dcp::CommandParser m_command;
     Dcp::ReplyParser m_reply;
-    QByteArray m_deviceName;
+    QString m_deviceName;
     QString m_serverName;
     quint16 m_serverPort;
     QString m_encoding;
+    QTextCodec *m_codec;
     QLabel *m_connectionStatusLabel;
 };
 

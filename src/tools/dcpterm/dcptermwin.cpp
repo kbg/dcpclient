@@ -32,26 +32,13 @@
 #include <QtDebug>
 #include <QtGui>
 
-inline static QString formatMessageOutput(const Dcp::Message &msg, bool incoming)
-{
-    QString result;
-    QTextStream os(&result);
-    os << (incoming ? "<< [" : ">> [") << msg.snr() << "] "
-       << (msg.isUrgent() ? "u" : "-")
-       << (msg.isReply() ? "r" : "-")
-       << hex << " 0x" << msg.flags() << dec << " "
-       << "<" << (incoming ? msg.source() : msg.destination()) << "> "
-       << "[" << msg.data().size() << "] "
-       << msg.data();
-    return result;
-}
-
 DcpTermWin::DcpTermWin(const CmdLineOptions &opts, QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::DcpTermWin),
       m_dcp(new Dcp::Client),
       m_serverPort(0),
       m_encoding("UTF-8"),
+      m_codec(0),
       m_connectionStatusLabel(new QLabel)
 {
     ui->setupUi(this);
@@ -72,8 +59,9 @@ DcpTermWin::DcpTermWin(const CmdLineOptions &opts, QWidget *parent)
                    SLOT(dcp_error(Dcp::Client::Error)));
     connect(m_dcp, SIGNAL(messageReceived()), SLOT(dcp_messageReceived()));
 
-    // load settings from ini file
+    // load settings from ini file, also sets m_codec
     loadSettings();
+    Q_ASSERT(m_codec);
 
     // overwrite settings by command line options
     if (!opts.serverName.isEmpty())
@@ -112,8 +100,8 @@ void DcpTermWin::loadSettings()
     // server settings and device name
     settings.beginGroup("Server");
     m_encoding = settings.value("Encoding", "UTF-8").toString();
-    updateDefaultEncoding();
-    m_deviceName = settings.value("DeviceName", "").toByteArray();
+    updateTextCodec();
+    m_deviceName = settings.value("DeviceName", "").toString();
     m_serverName = settings.value("ServerName", "localhost").toString();
     uint serverPort = settings.value("ServerPort", 2001).toUInt(&ok);
     m_serverPort = (ok && serverPort <= 0xffff) ? quint16(serverPort) : 2001;
@@ -197,7 +185,7 @@ void DcpTermWin::saveSettings()
     settings.beginGroup("Server");
     settings.setValue("ServerName", m_serverName);
     settings.setValue("ServerPort", m_serverPort);
-    settings.setValue("DeviceName", QString(m_deviceName));
+    settings.setValue("DeviceName", m_deviceName);
     settings.setValue("AutoReconnect", ui->actionAutoReconnect->isChecked());
     settings.setValue("ReconnectInterval", m_dcp->reconnectInterval());
     settings.setValue("Encoding", m_encoding);
@@ -249,28 +237,49 @@ void DcpTermWin::sendMessage(const Dcp::Message &msg)
 
 QByteArray DcpTermWin::normalizedDeviceName() const
 {
-    QByteArray deviceName = m_deviceName;
+    QString deviceName = m_deviceName;
     if (deviceName.isEmpty() || deviceName.trimmed().isEmpty()) {
         QString code = QDateTime::currentDateTimeUtc().toString("hhmmsszzz");
-        deviceName = "dcpterm" + code.toAscii();
+        deviceName = "dcpterm" + code;
     }
-    return deviceName;
+
+    return m_codec->fromUnicode(deviceName);
 }
 
-void DcpTermWin::updateDefaultEncoding()
+void DcpTermWin::updateTextCodec()
 {
-    QTextCodec *codec = 0;
+    m_codec = 0;
+
     if (m_encoding.toLower() == "utf-8")
-        codec = QTextCodec::codecForName("UTF-8");
+        m_codec = QTextCodec::codecForName("UTF-8");
     if (m_encoding.toLower() == "latin1")
-        codec = QTextCodec::codecForName("ISO 8859-1");
-    else {
+        m_codec = QTextCodec::codecForName("ISO-8859-1");
+
+    if (!m_codec) {
         m_encoding = "UTF-8";
-        codec = QTextCodec::codecForName("UTF-8");
+        m_codec = QTextCodec::codecForName("UTF-8");
     }
 
-    if (codec)
-        QTextCodec::setCodecForCStrings(codec);
+    Q_ASSERT(m_codec);
+}
+
+QString DcpTermWin::formatMessageOutput(
+        const Dcp::Message &msg, bool incoming) const
+{
+    QString device = m_codec->toUnicode(
+                incoming ? msg.source() : msg.destination());
+
+    QString result;
+    QTextStream os(&result, QIODevice::WriteOnly);
+    os << (incoming ? "<< [" : ">> [") << msg.snr() << "] "
+       << (msg.isUrgent() ? "u" : "-")
+       << (msg.isReply() ? "r" : "-")
+       << hex << " 0x" << msg.flags() << dec << " "
+       << "<" << device << "> "
+       << "[" << msg.data().size() << "] "
+       << m_codec->toUnicode(msg.data());
+
+    return result;
 }
 
 void DcpTermWin::printError(const QString &errorText)
@@ -318,8 +327,10 @@ void DcpTermWin::messageInputFinished()
 
     // finally send the message
     if (!messageText.isEmpty()) {
-        QByteArray destination = ui->comboDevice->currentText().toAscii();
-        QByteArray data = messageText.toAscii();
+        QString destText = ui->comboDevice->currentText();
+        QByteArray destination = m_codec->fromUnicode(destText);
+        QByteArray data = m_codec->fromUnicode(messageText);
+
         Dcp::Message msg = m_dcp->sendMessage(destination, data);
         if (verboseOutput())
             printLine(formatMessageOutput(msg, false), Qt::blue);
@@ -328,16 +339,18 @@ void DcpTermWin::messageInputFinished()
 
 void DcpTermWin::updateWindowTitle(Dcp::Client::State state)
 {
+    QString dcpDeviceName = m_codec ?
+                m_codec->toUnicode(m_dcp->deviceName()) : QString();
+
     if (state == Dcp::Client::ConnectingState ||
             state == Dcp::Client::ConnectedState) {
         setWindowTitle(tr("%1 - %2:%3 - DCP Terminal")
-                       .arg(QString(m_dcp->deviceName()))
+                       .arg(dcpDeviceName)
                        .arg(m_dcp->serverName())
                        .arg(m_dcp->serverPort()));
     }
     else {
-        setWindowTitle(tr("%1 - DCP Terminal")
-                       .arg(QString(m_dcp->deviceName())));
+        setWindowTitle(tr("%1 - DCP Terminal").arg(dcpDeviceName));
     }
 }
 
@@ -377,11 +390,14 @@ void DcpTermWin::dcp_stateChanged(Dcp::Client::State state)
     case Dcp::Client::ConnectedState:
         ui->actionConnect->setChecked(true);
         stateText = tr("Connected");
-        if (verboseOutput())
-            printLine(tr("Connected to %1:%2 as %3.").arg(m_dcp->serverName())
+        if (verboseOutput()) {
+            QString dcpDeviceName = m_codec->toUnicode(m_dcp->deviceName());
+            printLine(tr("Connected to %1:%2 as %3.")
+                         .arg(m_dcp->serverName())
                          .arg(m_dcp->serverPort())
-                         .arg(QString(m_dcp->deviceName())),
+                         .arg(dcpDeviceName),
                       Qt::blue);
+        }
         break;
     case Dcp::Client::ClosingState:
         stateText = tr("Disconnecting");
@@ -439,7 +455,7 @@ void DcpTermWin::dcp_messageReceived()
                 !m_reply.hasArguments())
             printLine("OK");
         else
-            printLine(m_reply.joinedArguments());
+            printLine(m_codec->toUnicode(m_reply.joinedArguments()));
     }
     else
     {
@@ -533,14 +549,15 @@ void DcpTermWin::on_actionSettings_triggered()
         return;
 
     m_encoding = dlg.encoding();
-    updateDefaultEncoding();
+    updateTextCodec();
     m_serverName = dlg.serverName();
     m_serverPort = dlg.serverPort();
-    m_deviceName = dlg.deviceName().toAscii();
+    m_deviceName = dlg.deviceName();
 
     m_dcp->disconnectFromServer();
     if (m_dcp->waitForDisconnected())
-        m_dcp->connectToServer(m_serverName, m_serverPort, normalizedDeviceName());
+        m_dcp->connectToServer(m_serverName, m_serverPort,
+                               normalizedDeviceName());
 }
 
 void DcpTermWin::on_actionAbout_triggered()

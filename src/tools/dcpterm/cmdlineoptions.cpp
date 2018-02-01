@@ -32,8 +32,8 @@ CmdLineOptions::CmdLineOptions()
       cerr(stderr, QIODevice::WriteOnly),
       serverName(QString()),
       serverPort(0),
-      deviceName(QByteArray()),
-      destDeviceName(QByteArray()),
+      deviceName(QString()),
+      destDeviceName(QString()),
       help(false)
 {
 }
@@ -80,7 +80,7 @@ bool CmdLineOptions::parse()
                 return false;
             }
 
-            deviceName = it->toAscii();
+            deviceName = *it;
         }
         else if (it->startsWith('-')) {
             cerr << appName << ": unknown option `" << *it << "'.\n"
@@ -88,7 +88,7 @@ bool CmdLineOptions::parse()
             return false;
         }
         else if (destDeviceName.isNull()) {
-            destDeviceName = it->toAscii();
+            destDeviceName = *it;
         }
         else {
             cerr << appName
