@@ -139,7 +139,8 @@ void DcpHub::socketDisconnected()
     }
 
     const ClientInfo clientInfo = m_socketMap.value(socket);
-    cout << "Disconnected device \"" << clientInfo.device << "\" ["
+    cout << "Disconnected device \""
+         << QString::fromLatin1(clientInfo.device) << "\" ["
          << clientInfo.address.toString() << ":" << clientInfo.port << "]."
          << endl;
 
@@ -231,15 +232,16 @@ bool DcpHub::registerDeviceName(QTcpSocket *socket, const QByteArray &name)
     }
 
     if (m_deviceMap.contains(name)) {
-        cerr << "Device name \"" << name << "\" already exists ["
-             << ci.address.toString() << ":" << ci.port << "]." << endl;
+        cerr << "Device name \"" << QString::fromLatin1(name)
+             << "\" already exists [" << ci.address.toString() << ":"
+             << ci.port << "]." << endl;
         return false;
     }
 
     ci.device = name;
     m_deviceMap[name] = socket;
 
-    cout << "Registered device \"" << name << "\" ["
+    cout << "Registered device \"" << QString::fromLatin1(name) << "\" ["
          << ci.address.toString() << ":" << ci.port << "]." << endl;
     return true;
 }
