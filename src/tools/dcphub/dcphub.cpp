@@ -405,6 +405,32 @@ void DcpHub::handleCommand(const Dcp::Message &msg)
             sendMessage(socket, msg.replyMessage(DCPCLIENT_VERSION_STRING));
             return;
         }
+
+        // get qtversion
+        //     returns: <qtversion>
+        if (identifier == "qtversion")
+        {
+            if (cmd.hasArguments()) {
+                sendMessage(socket, msg.ackMessage(Dcp::AckParameterError));
+                return;
+            }
+            sendMessage(socket, msg.ackMessage());
+            sendMessage(socket, msg.replyMessage(qVersion()));
+            return;
+        }
+
+        // get echo <arg1> [<arg2> [...]]
+        //     returns: <arg1> [<arg2> [...]]
+        if (identifier == "echo")
+        {
+            if (!cmd.hasArguments()) {
+                sendMessage(socket, msg.ackMessage(Dcp::AckParameterError));
+                return;
+            }
+            sendMessage(socket, msg.ackMessage());
+            sendMessage(socket, msg.replyMessage(cmd.joinedArguments()));
+            return;
+        }
     }
     else if (cmdType == Dcp::CommandParser::SetCmd)
     {
