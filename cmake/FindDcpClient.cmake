@@ -12,7 +12,10 @@ FIND_PATH(DCPCLIENT_INCLUDE_DIR dcpclient/dcpclient.h
 )
 
 SET(DCPCLIENT_NAMES ${DCPCLIENT_NAMES} DcpClient)
-FIND_LIBRARY(DCPCLIENT_LIBRARY NAMES ${DCPCLIENT_NAMES})
+FIND_LIBRARY(DCPCLIENT_LIBRARY
+    NAMES ${DCPCLIENT_NAMES}
+    PATHS /usr/lib /usr/local/lib /opt/dcpclient/lib
+)
 
 # handle the QUIETLY and REQUIRED arguments and set DCPCLIENT_FOUND to TRUE if
 # all listed variables are TRUE
