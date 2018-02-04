@@ -33,6 +33,7 @@ option(BUILD_TOOLS "Build utility programs." FALSE)
 option(BUILD_EXAMPLES "Build example programs." FALSE)
 option(BUILD_DOCUMENTATION "Build doxygen documentation." FALSE)
 option(BUILD_PYTHON_BINDINGS "Build Python bindings." FALSE)
+option(INSTALL_STATIC_LIBRARY "Install static dcpclient library." FALSE)
 option(INSTALL_EXAMPLE_SOURCES "Install source code of the utility and example programs." FALSE)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})

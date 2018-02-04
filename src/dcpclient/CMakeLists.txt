@@ -46,10 +46,12 @@ set_target_properties(DcpClient PROPERTIES
     SOVERSION ${DCPCLIENT_LIB_SOVERSION}
 )
 
-install(FILES ${libDcpClient_public_HDRS}
-        DESTINATION include/dcpclient)
+if ((NOT BUILD_STATIC_LIBRARY) OR INSTALL_STATIC_LIBRARY)
+    install(FILES ${libDcpClient_public_HDRS}
+            DESTINATION include/dcpclient)
 
-install(TARGETS DcpClient
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)
+    install(TARGETS DcpClient
+            RUNTIME DESTINATION bin
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib)
+endif()
